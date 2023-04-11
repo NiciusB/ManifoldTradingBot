@@ -7,65 +7,43 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E5421F1629E5C20A00A98D88 /* ManifoldTradingBotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F1529E5C20A00A98D88 /* ManifoldTradingBotApp.swift */; };
-		E5421F1829E5C20A00A98D88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F1729E5C20A00A98D88 /* ContentView.swift */; };
-		E5421F1A29E5C20A00A98D88 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E5421F1929E5C20A00A98D88 /* Assets.xcassets */; };
-		E5421F1E29E5C20A00A98D88 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E5421F1D29E5C20A00A98D88 /* Preview Assets.xcassets */; };
-		E5421F2829E5C20B00A98D88 /* ManifoldTradingBotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F2729E5C20B00A98D88 /* ManifoldTradingBotTests.swift */; };
-		E5421F3229E5C20B00A98D88 /* ManifoldTradingBotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F3129E5C20B00A98D88 /* ManifoldTradingBotUITests.swift */; };
-		E5421F3429E5C20B00A98D88 /* ManifoldTradingBotUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F3329E5C20B00A98D88 /* ManifoldTradingBotUITestsLaunchTests.swift */; };
+		E533DEF729E5D409000458E3 /* PlaceBet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E533DEF629E5D409000458E3 /* PlaceBet.swift */; };
+		E5421F4929E5C2AF00A98D88 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F4829E5C2AF00A98D88 /* main.swift */; };
+		E5421F4F29E5C2F800A98D88 /* ManifoldApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F4E29E5C2F800A98D88 /* ManifoldApi.swift */; };
+		E5421F5229E5C32100A98D88 /* Dotenv in Frameworks */ = {isa = PBXBuildFile; productRef = E5421F5129E5C32100A98D88 /* Dotenv */; };
+		E5421F5529E5C33000A98D88 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = E5421F5429E5C33000A98D88 /* Alamofire */; };
+		E553591A29E5C74E00C3AF16 /* GetMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E553591929E5C74E00C3AF16 /* GetMe.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		E5421F2429E5C20B00A98D88 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E5421F0A29E5C20900A98D88 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E5421F1129E5C20A00A98D88;
-			remoteInfo = ManifoldTradingBot;
+/* Begin PBXCopyFilesBuildPhase section */
+		E5421F4429E5C2AF00A98D88 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
 		};
-		E5421F2E29E5C20B00A98D88 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E5421F0A29E5C20900A98D88 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E5421F1129E5C20A00A98D88;
-			remoteInfo = ManifoldTradingBot;
-		};
-/* End PBXContainerItemProxy section */
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E5421F1229E5C20A00A98D88 /* ManifoldTradingBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ManifoldTradingBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E5421F1529E5C20A00A98D88 /* ManifoldTradingBotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifoldTradingBotApp.swift; sourceTree = "<group>"; };
-		E5421F1729E5C20A00A98D88 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		E5421F1929E5C20A00A98D88 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		E5421F1B29E5C20A00A98D88 /* ManifoldTradingBot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ManifoldTradingBot.entitlements; sourceTree = "<group>"; };
-		E5421F1D29E5C20A00A98D88 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		E5421F2329E5C20B00A98D88 /* ManifoldTradingBotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ManifoldTradingBotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E5421F2729E5C20B00A98D88 /* ManifoldTradingBotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifoldTradingBotTests.swift; sourceTree = "<group>"; };
-		E5421F2D29E5C20B00A98D88 /* ManifoldTradingBotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ManifoldTradingBotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E5421F3129E5C20B00A98D88 /* ManifoldTradingBotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifoldTradingBotUITests.swift; sourceTree = "<group>"; };
-		E5421F3329E5C20B00A98D88 /* ManifoldTradingBotUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifoldTradingBotUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		E533DEF629E5D409000458E3 /* PlaceBet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceBet.swift; sourceTree = "<group>"; };
+		E5421F4629E5C2AF00A98D88 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5421F4829E5C2AF00A98D88 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		E5421F4E29E5C2F800A98D88 /* ManifoldApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifoldApi.swift; sourceTree = "<group>"; };
+		E5421F5729E5C38100A98D88 /* .env */ = {isa = PBXFileReference; lastKnownFileType = text; path = .env; sourceTree = "<group>"; };
+		E5421F5829E5C3C000A98D88 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		E553591929E5C74E00C3AF16 /* GetMe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetMe.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		E5421F0F29E5C20A00A98D88 /* Frameworks */ = {
+		E5421F4329E5C2AF00A98D88 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F2029E5C20B00A98D88 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F2A29E5C20B00A98D88 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				E5421F5229E5C32100A98D88 /* Dotenv in Frameworks */,
+				E5421F5529E5C33000A98D88 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,9 +53,7 @@
 		E5421F0929E5C20900A98D88 = {
 			isa = PBXGroup;
 			children = (
-				E5421F1429E5C20A00A98D88 /* ManifoldTradingBot */,
-				E5421F2629E5C20B00A98D88 /* ManifoldTradingBotTests */,
-				E5421F3029E5C20B00A98D88 /* ManifoldTradingBotUITests */,
+				E5421F4729E5C2AF00A98D88 /* CLI */,
 				E5421F1329E5C20A00A98D88 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,105 +61,64 @@
 		E5421F1329E5C20A00A98D88 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E5421F1229E5C20A00A98D88 /* ManifoldTradingBot.app */,
-				E5421F2329E5C20B00A98D88 /* ManifoldTradingBotTests.xctest */,
-				E5421F2D29E5C20B00A98D88 /* ManifoldTradingBotUITests.xctest */,
+				E5421F4629E5C2AF00A98D88 /* CLI */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E5421F1429E5C20A00A98D88 /* ManifoldTradingBot */ = {
+		E5421F4729E5C2AF00A98D88 /* CLI */ = {
 			isa = PBXGroup;
 			children = (
-				E5421F1529E5C20A00A98D88 /* ManifoldTradingBotApp.swift */,
-				E5421F1729E5C20A00A98D88 /* ContentView.swift */,
-				E5421F1929E5C20A00A98D88 /* Assets.xcassets */,
-				E5421F1B29E5C20A00A98D88 /* ManifoldTradingBot.entitlements */,
-				E5421F1C29E5C20A00A98D88 /* Preview Content */,
+				E5421F4D29E5C2EA00A98D88 /* ManifoldApi */,
+				E5421F4829E5C2AF00A98D88 /* main.swift */,
+				E5421F5729E5C38100A98D88 /* .env */,
+				E5421F5829E5C3C000A98D88 /* .gitignore */,
 			);
-			path = ManifoldTradingBot;
+			path = CLI;
 			sourceTree = "<group>";
 		};
-		E5421F1C29E5C20A00A98D88 /* Preview Content */ = {
+		E5421F4D29E5C2EA00A98D88 /* ManifoldApi */ = {
 			isa = PBXGroup;
 			children = (
-				E5421F1D29E5C20A00A98D88 /* Preview Assets.xcassets */,
+				E553591829E5C71500C3AF16 /* Endpoints */,
+				E5421F4E29E5C2F800A98D88 /* ManifoldApi.swift */,
 			);
-			path = "Preview Content";
+			path = ManifoldApi;
 			sourceTree = "<group>";
 		};
-		E5421F2629E5C20B00A98D88 /* ManifoldTradingBotTests */ = {
+		E553591829E5C71500C3AF16 /* Endpoints */ = {
 			isa = PBXGroup;
 			children = (
-				E5421F2729E5C20B00A98D88 /* ManifoldTradingBotTests.swift */,
+				E553591929E5C74E00C3AF16 /* GetMe.swift */,
+				E533DEF629E5D409000458E3 /* PlaceBet.swift */,
 			);
-			path = ManifoldTradingBotTests;
-			sourceTree = "<group>";
-		};
-		E5421F3029E5C20B00A98D88 /* ManifoldTradingBotUITests */ = {
-			isa = PBXGroup;
-			children = (
-				E5421F3129E5C20B00A98D88 /* ManifoldTradingBotUITests.swift */,
-				E5421F3329E5C20B00A98D88 /* ManifoldTradingBotUITestsLaunchTests.swift */,
-			);
-			path = ManifoldTradingBotUITests;
+			path = Endpoints;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E5421F1129E5C20A00A98D88 /* ManifoldTradingBot */ = {
+		E5421F4529E5C2AF00A98D88 /* CLI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E5421F3729E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBot" */;
+			buildConfigurationList = E5421F4A29E5C2AF00A98D88 /* Build configuration list for PBXNativeTarget "CLI" */;
 			buildPhases = (
-				E5421F0E29E5C20A00A98D88 /* Sources */,
-				E5421F0F29E5C20A00A98D88 /* Frameworks */,
-				E5421F1029E5C20A00A98D88 /* Resources */,
+				E5421F4229E5C2AF00A98D88 /* Sources */,
+				E5421F4329E5C2AF00A98D88 /* Frameworks */,
+				E5421F4429E5C2AF00A98D88 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E5421F5A29E5C3DA00A98D88 /* PBXTargetDependency */,
 			);
-			name = ManifoldTradingBot;
-			productName = ManifoldTradingBot;
-			productReference = E5421F1229E5C20A00A98D88 /* ManifoldTradingBot.app */;
-			productType = "com.apple.product-type.application";
-		};
-		E5421F2229E5C20B00A98D88 /* ManifoldTradingBotTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E5421F3A29E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBotTests" */;
-			buildPhases = (
-				E5421F1F29E5C20B00A98D88 /* Sources */,
-				E5421F2029E5C20B00A98D88 /* Frameworks */,
-				E5421F2129E5C20B00A98D88 /* Resources */,
+			name = CLI;
+			packageProductDependencies = (
+				E5421F5129E5C32100A98D88 /* Dotenv */,
+				E5421F5429E5C33000A98D88 /* Alamofire */,
 			);
-			buildRules = (
-			);
-			dependencies = (
-				E5421F2529E5C20B00A98D88 /* PBXTargetDependency */,
-			);
-			name = ManifoldTradingBotTests;
-			productName = ManifoldTradingBotTests;
-			productReference = E5421F2329E5C20B00A98D88 /* ManifoldTradingBotTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		E5421F2C29E5C20B00A98D88 /* ManifoldTradingBotUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E5421F3D29E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBotUITests" */;
-			buildPhases = (
-				E5421F2929E5C20B00A98D88 /* Sources */,
-				E5421F2A29E5C20B00A98D88 /* Frameworks */,
-				E5421F2B29E5C20B00A98D88 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				E5421F2F29E5C20B00A98D88 /* PBXTargetDependency */,
-			);
-			name = ManifoldTradingBotUITests;
-			productName = ManifoldTradingBotUITests;
-			productReference = E5421F2D29E5C20B00A98D88 /* ManifoldTradingBotUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			productName = ManifoldTradingBotCli;
+			productReference = E5421F4629E5C2AF00A98D88 /* CLI */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -195,16 +130,8 @@
 				LastSwiftUpdateCheck = 1430;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					E5421F1129E5C20A00A98D88 = {
+					E5421F4529E5C2AF00A98D88 = {
 						CreatedOnToolsVersion = 14.3;
-					};
-					E5421F2229E5C20B00A98D88 = {
-						CreatedOnToolsVersion = 14.3;
-						TestTargetID = E5421F1129E5C20A00A98D88;
-					};
-					E5421F2C29E5C20B00A98D88 = {
-						CreatedOnToolsVersion = 14.3;
-						TestTargetID = E5421F1129E5C20A00A98D88;
 					};
 				};
 			};
@@ -217,82 +144,38 @@
 				Base,
 			);
 			mainGroup = E5421F0929E5C20900A98D88;
+			packageReferences = (
+				E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */,
+				E5421F5329E5C33000A98D88 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				E5421F5629E5C34D00A98D88 /* XCRemoteSwiftPackageReference "SwiftLint" */,
+			);
 			productRefGroup = E5421F1329E5C20A00A98D88 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E5421F1129E5C20A00A98D88 /* ManifoldTradingBot */,
-				E5421F2229E5C20B00A98D88 /* ManifoldTradingBotTests */,
-				E5421F2C29E5C20B00A98D88 /* ManifoldTradingBotUITests */,
+				E5421F4529E5C2AF00A98D88 /* CLI */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		E5421F1029E5C20A00A98D88 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E5421F1E29E5C20A00A98D88 /* Preview Assets.xcassets in Resources */,
-				E5421F1A29E5C20A00A98D88 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F2129E5C20B00A98D88 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F2B29E5C20B00A98D88 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		E5421F0E29E5C20A00A98D88 /* Sources */ = {
+		E5421F4229E5C2AF00A98D88 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E5421F1829E5C20A00A98D88 /* ContentView.swift in Sources */,
-				E5421F1629E5C20A00A98D88 /* ManifoldTradingBotApp.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F1F29E5C20B00A98D88 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E5421F2829E5C20B00A98D88 /* ManifoldTradingBotTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5421F2929E5C20B00A98D88 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E5421F3429E5C20B00A98D88 /* ManifoldTradingBotUITestsLaunchTests.swift in Sources */,
-				E5421F3229E5C20B00A98D88 /* ManifoldTradingBotUITests.swift in Sources */,
+				E5421F4F29E5C2F800A98D88 /* ManifoldApi.swift in Sources */,
+				E533DEF729E5D409000458E3 /* PlaceBet.swift in Sources */,
+				E553591A29E5C74E00C3AF16 /* GetMe.swift in Sources */,
+				E5421F4929E5C2AF00A98D88 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		E5421F2529E5C20B00A98D88 /* PBXTargetDependency */ = {
+		E5421F5A29E5C3DA00A98D88 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E5421F1129E5C20A00A98D88 /* ManifoldTradingBot */;
-			targetProxy = E5421F2429E5C20B00A98D88 /* PBXContainerItemProxy */;
-		};
-		E5421F2F29E5C20B00A98D88 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E5421F1129E5C20A00A98D88 /* ManifoldTradingBot */;
-			targetProxy = E5421F2E29E5C20B00A98D88 /* PBXContainerItemProxy */;
+			productRef = E5421F5929E5C3DA00A98D88 /* SwiftLintPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -406,169 +289,29 @@
 			};
 			name = Release;
 		};
-		E5421F3829E5C20B00A98D88 /* Debug */ = {
+		E5421F4B29E5C2AF00A98D88 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ManifoldTradingBot/ManifoldTradingBot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ManifoldTradingBot/Preview Content\"";
 				DEVELOPMENT_TEAM = NN928SCZ5Y;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		E5421F3929E5C20B00A98D88 /* Release */ = {
+		E5421F4C29E5C2AF00A98D88 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ManifoldTradingBot/ManifoldTradingBot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ManifoldTradingBot/Preview Content\"";
 				DEVELOPMENT_TEAM = NN928SCZ5Y;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		E5421F3B29E5C20B00A98D88 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = NN928SCZ5Y;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBotTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ManifoldTradingBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ManifoldTradingBot";
-			};
-			name = Debug;
-		};
-		E5421F3C29E5C20B00A98D88 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = NN928SCZ5Y;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBotTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ManifoldTradingBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ManifoldTradingBot";
-			};
-			name = Release;
-		};
-		E5421F3E29E5C20B00A98D88 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = NN928SCZ5Y;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBotUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ManifoldTradingBot;
-			};
-			name = Debug;
-		};
-		E5421F3F29E5C20B00A98D88 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = NN928SCZ5Y;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.balbona.ManifoldTradingBotUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ManifoldTradingBot;
 			};
 			name = Release;
 		};
@@ -584,34 +327,61 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E5421F3729E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBot" */ = {
+		E5421F4A29E5C2AF00A98D88 /* Build configuration list for PBXNativeTarget "CLI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E5421F3829E5C20B00A98D88 /* Debug */,
-				E5421F3929E5C20B00A98D88 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E5421F3A29E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBotTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E5421F3B29E5C20B00A98D88 /* Debug */,
-				E5421F3C29E5C20B00A98D88 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E5421F3D29E5C20B00A98D88 /* Build configuration list for PBXNativeTarget "ManifoldTradingBotUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E5421F3E29E5C20B00A98D88 /* Debug */,
-				E5421F3F29E5C20B00A98D88 /* Release */,
+				E5421F4B29E5C2AF00A98D88 /* Debug */,
+				E5421F4C29E5C2AF00A98D88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/emilioschepis/swift-dotenv.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		E5421F5329E5C33000A98D88 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+		E5421F5629E5C34D00A98D88 /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/SwiftLint.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.51.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E5421F5129E5C32100A98D88 /* Dotenv */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */;
+			productName = Dotenv;
+		};
+		E5421F5429E5C33000A98D88 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5421F5329E5C33000A98D88 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		E5421F5929E5C3DA00A98D88 /* SwiftLintPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5421F5629E5C34D00A98D88 /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = "plugin:SwiftLintPlugin";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E5421F0A29E5C20900A98D88 /* Project object */;
 }
