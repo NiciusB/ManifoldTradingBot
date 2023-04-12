@@ -5,6 +5,7 @@ class AlpacaApi {
     let apiEndpoint: String
     let apiKey: String
     let apiSecret: String
+    // TODO: Migrate to https://swiftpackageindex.com/apple/swift-nio/main/documentation/niowebsocket to allow compiling for Linux
     private let webSocket: URLSessionWebSocketTask
     private let loginTask = Task(priority: .background) {
         while true {

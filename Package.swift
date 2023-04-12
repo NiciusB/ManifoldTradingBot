@@ -8,6 +8,12 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
+    products: [
+        .executable(
+            name: "CLI",
+            targets: ["CLI"]
+        )
+    ],
     dependencies: [
         .package(
             url: "https://github.com/Flight-School/AnyCodable",
@@ -38,8 +44,9 @@ let package = Package(
                 "Alamofire",
                 .product(name: "Dotenv", package: "swift-dotenv")
             ],
-            path: "Sources/CLI",
-            plugins: [.plugin(name: "SwiftLintPlugin", package: "SwiftLint")]
+            plugins: [
+                .plugin(name: "SwiftLintPlugin", package: "SwiftLint")
+            ]
         ),
         .testTarget(
             name: "CLITests",
