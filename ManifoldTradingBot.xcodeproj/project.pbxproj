@@ -7,12 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E51AA0FF29E6E03C003E35F6 /* AnyCodable in Frameworks */ = {isa = PBXBuildFile; productRef = E51AA0FE29E6E03C003E35F6 /* AnyCodable */; };
+		E51AA10129E6EFA7003E35F6 /* SharesOutstandingHistoryApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51AA10029E6EFA7003E35F6 /* SharesOutstandingHistoryApi.swift */; };
+		E51AA10429E6F0F3003E35F6 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = E51AA10329E6F0F3003E35F6 /* SwiftSoup */; };
+		E52B8C5129E6051700568B20 /* GetMarket.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52B8C5029E6051700568B20 /* GetMarket.swift */; };
+		E52B8C5529E6145100568B20 /* AlpacaApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52B8C5429E6145100568B20 /* AlpacaApi.swift */; };
+		E52B8C5729E622F000568B20 /* RuntimeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52B8C5629E622F000568B20 /* RuntimeError.swift */; };
 		E533DEF729E5D409000458E3 /* PlaceBet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E533DEF629E5D409000458E3 /* PlaceBet.swift */; };
 		E5421F4929E5C2AF00A98D88 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F4829E5C2AF00A98D88 /* main.swift */; };
 		E5421F4F29E5C2F800A98D88 /* ManifoldApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F4E29E5C2F800A98D88 /* ManifoldApi.swift */; };
 		E5421F5229E5C32100A98D88 /* Dotenv in Frameworks */ = {isa = PBXBuildFile; productRef = E5421F5129E5C32100A98D88 /* Dotenv */; };
 		E5421F5529E5C33000A98D88 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = E5421F5429E5C33000A98D88 /* Alamofire */; };
 		E553591A29E5C74E00C3AF16 /* GetMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E553591929E5C74E00C3AF16 /* GetMe.swift */; };
+		E55E2B8729E72C2E00248E5E /* CpmmMarketUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E55E2B8629E72C2E00248E5E /* CpmmMarketUtils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +35,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E51AA10029E6EFA7003E35F6 /* SharesOutstandingHistoryApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharesOutstandingHistoryApi.swift; sourceTree = "<group>"; };
+		E52B8C5029E6051700568B20 /* GetMarket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GetMarket.swift; sourceTree = "<group>"; };
+		E52B8C5329E60F3500568B20 /* .swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
+		E52B8C5429E6145100568B20 /* AlpacaApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlpacaApi.swift; sourceTree = "<group>"; };
+		E52B8C5629E622F000568B20 /* RuntimeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeError.swift; sourceTree = "<group>"; };
 		E533DEF629E5D409000458E3 /* PlaceBet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceBet.swift; sourceTree = "<group>"; };
 		E5421F4629E5C2AF00A98D88 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5421F4829E5C2AF00A98D88 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -35,6 +47,7 @@
 		E5421F5729E5C38100A98D88 /* .env */ = {isa = PBXFileReference; lastKnownFileType = text; path = .env; sourceTree = "<group>"; };
 		E5421F5829E5C3C000A98D88 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		E553591929E5C74E00C3AF16 /* GetMe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetMe.swift; sourceTree = "<group>"; };
+		E55E2B8629E72C2E00248E5E /* CpmmMarketUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CpmmMarketUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +56,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E5421F5229E5C32100A98D88 /* Dotenv in Frameworks */,
+				E51AA10429E6F0F3003E35F6 /* SwiftSoup in Frameworks */,
+				E51AA0FF29E6E03C003E35F6 /* AnyCodable in Frameworks */,
 				E5421F5529E5C33000A98D88 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,6 +88,10 @@
 				E5421F4829E5C2AF00A98D88 /* main.swift */,
 				E5421F5729E5C38100A98D88 /* .env */,
 				E5421F5829E5C3C000A98D88 /* .gitignore */,
+				E52B8C5329E60F3500568B20 /* .swiftlint.yml */,
+				E52B8C5429E6145100568B20 /* AlpacaApi.swift */,
+				E52B8C5629E622F000568B20 /* RuntimeError.swift */,
+				E51AA10029E6EFA7003E35F6 /* SharesOutstandingHistoryApi.swift */,
 			);
 			path = CLI;
 			sourceTree = "<group>";
@@ -82,6 +101,7 @@
 			children = (
 				E553591829E5C71500C3AF16 /* Endpoints */,
 				E5421F4E29E5C2F800A98D88 /* ManifoldApi.swift */,
+				E55E2B8629E72C2E00248E5E /* CpmmMarketUtils.swift */,
 			);
 			path = ManifoldApi;
 			sourceTree = "<group>";
@@ -91,6 +111,7 @@
 			children = (
 				E553591929E5C74E00C3AF16 /* GetMe.swift */,
 				E533DEF629E5D409000458E3 /* PlaceBet.swift */,
+				E52B8C5029E6051700568B20 /* GetMarket.swift */,
 			);
 			path = Endpoints;
 			sourceTree = "<group>";
@@ -115,6 +136,8 @@
 			packageProductDependencies = (
 				E5421F5129E5C32100A98D88 /* Dotenv */,
 				E5421F5429E5C33000A98D88 /* Alamofire */,
+				E51AA0FE29E6E03C003E35F6 /* AnyCodable */,
+				E51AA10329E6F0F3003E35F6 /* SwiftSoup */,
 			);
 			productName = ManifoldTradingBotCli;
 			productReference = E5421F4629E5C2AF00A98D88 /* CLI */;
@@ -148,6 +171,8 @@
 				E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */,
 				E5421F5329E5C33000A98D88 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				E5421F5629E5C34D00A98D88 /* XCRemoteSwiftPackageReference "SwiftLint" */,
+				E51AA0FD29E6E03C003E35F6 /* XCRemoteSwiftPackageReference "AnyCodable" */,
+				E51AA10229E6F0F3003E35F6 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
 			);
 			productRefGroup = E5421F1329E5C20A00A98D88 /* Products */;
 			projectDirPath = "";
@@ -163,9 +188,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E55E2B8729E72C2E00248E5E /* CpmmMarketUtils.swift in Sources */,
 				E5421F4F29E5C2F800A98D88 /* ManifoldApi.swift in Sources */,
 				E533DEF729E5D409000458E3 /* PlaceBet.swift in Sources */,
+				E51AA10129E6EFA7003E35F6 /* SharesOutstandingHistoryApi.swift in Sources */,
+				E52B8C5729E622F000568B20 /* RuntimeError.swift in Sources */,
 				E553591A29E5C74E00C3AF16 /* GetMe.swift in Sources */,
+				E52B8C5529E6145100568B20 /* AlpacaApi.swift in Sources */,
+				E52B8C5129E6051700568B20 /* GetMarket.swift in Sources */,
 				E5421F4929E5C2AF00A98D88 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -339,6 +369,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		E51AA0FD29E6E03C003E35F6 /* XCRemoteSwiftPackageReference "AnyCodable" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Flight-School/AnyCodable";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.7;
+			};
+		};
+		E51AA10229E6F0F3003E35F6 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/emilioschepis/swift-dotenv.git";
@@ -366,6 +412,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E51AA0FE29E6E03C003E35F6 /* AnyCodable */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E51AA0FD29E6E03C003E35F6 /* XCRemoteSwiftPackageReference "AnyCodable" */;
+			productName = AnyCodable;
+		};
+		E51AA10329E6F0F3003E35F6 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E51AA10229E6F0F3003E35F6 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
 		E5421F5129E5C32100A98D88 /* Dotenv */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E5421F5029E5C32100A98D88 /* XCRemoteSwiftPackageReference "swift-dotenv" */;

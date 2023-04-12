@@ -6,7 +6,7 @@ struct PlaceBet: ManifoldApiEndpoint {
         let amount: Int
         let contractId: String
         let outcome: String
-        let limitProb: Float? = nil
+        let limitProb: Float?
     }
 
     init(_ req: RequestParams) {
@@ -19,6 +19,6 @@ struct PlaceBet: ManifoldApiEndpoint {
     var body: RequestParams?
 
     struct Root: Decodable {
-       var encoded: Data
-   }
+       var TODODefineDecodable: Data
+    }
 }

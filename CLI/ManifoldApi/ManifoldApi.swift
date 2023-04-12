@@ -3,7 +3,7 @@ import Alamofire
 
 struct ManifoldApi {
     let apiKey: String
-
+    
     private func request<E: ManifoldApiEndpoint>(_ endpoint: E, logResponse: Bool = false) async throws -> E.ResDec {
         let urlPath = "https://manifold.markets/api" + endpoint.path
         let headers = HTTPHeaders([
@@ -19,41 +19,69 @@ struct ManifoldApi {
             encoder: JSONParameterEncoder.default,
             headers: headers
         )
-
+        
         if logResponse {
             request.responseString { response in
                 print(response)
             }
         }
-
-        request
-            .validate()
-            .responseData { response in
-                switch response.result {
-                case .success:
-                    print("Validation Successful")
-                case let .failure(error):
-                    print("Error:", error)
-                }
-            }
-
-        let dataTask = request.serializingDecodable(endpoint.responseDecodable)
-        return try await dataTask.value
+        
+        let dataTask = request.serializingData()
+        let dataResponse = await dataTask.response
+        let resData = try dataResponse.result.get()
+        
+        let errorBody = try JSONDecoder().decode(Error400Response.self, from: resData)
+        if dataResponse.response?.statusCode == 400 || errorBody.error != nil {
+            throw ManifoldApiError.invalidRequest(
+                message: errorBody.error ??
+                errorBody.message ??
+                ("Unknown error: " + String(decoding: resData, as: UTF8.self))
+            )
+        }
+        
+        do {
+            return try JSONDecoder().decode(endpoint.responseDecodable, from: resData)
+        } catch let error as DecodingError {
+            throw ManifoldApiError.unableToDecodeResponse(
+                decodingError: error,
+                response: String(decoding: resData, as: UTF8.self)
+            )
+        }
     }
-
+    
     func getMe() async throws -> GetMe.ResDec {
         return try await self.request(GetMe())
     }
-
-    func placeBet(_ req: PlaceBet.RequestParams) async throws -> PlaceBet.ResDec {
-        return try await self.request(PlaceBet(req))
+    
+    func placeBet(
+        amount: Int, contractId: String, outcome: String, limitProb: Float? = nil
+    ) async throws -> PlaceBet.ResDec {
+        return try await self.request(PlaceBet(PlaceBet.RequestParams(
+            amount: amount,
+            contractId: contractId,
+            outcome: outcome,
+            limitProb: limitProb
+        )))
+    }
+    
+    func getMarket(_ id: String) async throws -> GetMarket.ResDec {
+        return try await self.request(GetMarket(id))
+    }
+    
+    struct Error400Response: Decodable {
+        let message: String?
+        let error: String?
+    }
+    enum ManifoldApiError: Error {
+        case invalidRequest(message: String)
+        case unableToDecodeResponse(decodingError: DecodingError, response: String)
     }
 }
 
 protocol ManifoldApiEndpoint {
     associatedtype ResDec: Decodable
     associatedtype BodyEncodable: Encodable
-
+    
     var method: HTTPMethod { get }
     var path: String { get }
     var body: BodyEncodable? { get }
