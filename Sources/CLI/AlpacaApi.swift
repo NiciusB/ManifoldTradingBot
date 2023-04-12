@@ -12,7 +12,7 @@ class AlpacaApi {
             await Task.yield()
         }
     }
-    private var connectionTask: Task<Any, Error>?
+    private var connectionTask: Task<Void, Error>?
     private var lastTradeValues: [String: Float] = [:]
     
     init(apiEndpoint: String, apiKey: String, apiSecret: String) {

@@ -40,7 +40,7 @@ class MainApp {
             Market(id: "78LK7lYi6fgGHMWvCG8j", realStockSymbol: "MSFT")
         ]
     }
-    
+
     func start() async throws {
         let stocksToTrack = marketsDb.map { market in market.realStockSymbol}
         
@@ -76,6 +76,11 @@ class MainApp {
             } else {
                 return (market, lastStockTradeValue!)
             }
+        }
+        
+        if realTradeValues.isEmpty {
+            print("We have no stock data for any market. That's probably because the markets closed right now, so we don't get realtime data. And we don't poll for historic data for now, so just wait until they open")
+            return
         }
         
         let manifoldMarkets = try await getManifoldMarkets(realTradeValues.map { (market, _) in market.id })

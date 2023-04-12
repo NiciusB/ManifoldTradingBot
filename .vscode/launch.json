@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "name": "Debug CLI",
+            "program": "${workspaceFolder:ManifoldTradingBot}/.build/debug/CLI",
+            "args": [],
+            "cwd": "${workspaceFolder:ManifoldTradingBot}",
+            "preLaunchTask": "swift: Build Debug CLI"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "name": "Release CLI",
+            "program": "${workspaceFolder:ManifoldTradingBot}/.build/release/CLI",
+            "args": [],
+            "cwd": "${workspaceFolder:ManifoldTradingBot}",
+            "preLaunchTask": "swift: Build Release CLI"
+        }
+    ]
+}
