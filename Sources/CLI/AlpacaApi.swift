@@ -8,7 +8,7 @@ class AlpacaApi {
     private let webSocket: URLSessionWebSocketTask
     private let loginTask = Task(priority: .background) {
         while true {
-            try await Task.sleep(nanoseconds: 1000)
+            try await Task.sleep(nanoseconds: 100000)
             await Task.yield()
         }
     }

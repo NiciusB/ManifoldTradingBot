@@ -50,8 +50,6 @@ struct CpmmMarketUtils {
             targetProbability = (targetValue - market.min) / (market.max - market.min)
         }
         
-        print("probabilities:", targetProbability, market.probability)
-        
         // Manually inversed formulas from calculatePseudoNumericMarketplaceValue, to solve for YES/NO votes on a target cpmm probability
         let outcome = market.probability < targetProbability ? "YES" : "NO"
         

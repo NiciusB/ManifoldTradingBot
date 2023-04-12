@@ -40,6 +40,10 @@ let package = Package(
             ],
             path: "Sources/CLI",
             plugins: [.plugin(name: "SwiftLintPlugin", package: "SwiftLint")]
+        ),
+        .testTarget(
+            name: "CLITests",
+            dependencies: ["CLI"]
         )
     ]
 )
