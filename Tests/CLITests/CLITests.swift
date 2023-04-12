@@ -10,12 +10,12 @@ final class CLITests: XCTestCase {
     
     func testPRemainsStable() throws {
         for numbers in 0...100 {
-            let p: Float = Float(numbers) / 100
+            let origP: Float = Float(numbers) / 100
             let pool = GetMarket.Pool(YES: 123, NO: 123)
-            let probability = CpmmMarketUtils.calcMarketProbabilityFromMarketP(p, pool: pool)
+            let probability = CpmmMarketUtils.calcMarketProbabilityFromMarketP(origP, pool: pool)
             let newP = CpmmMarketUtils.calcMarketPFromMarketProbability(probability, pool: pool)
             
-            XCTAssertLessThanOrEqual(abs(p - newP), 0.0000001, "P should remain semi-stable")
+            XCTAssertLessThanOrEqual(abs(origP - newP), 0.0000001, "P should remain semi-stable")
         }
     }
     

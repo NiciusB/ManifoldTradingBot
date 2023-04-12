@@ -9,7 +9,7 @@
             "name": "Debug CLI",
             "program": "${workspaceFolder:ManifoldTradingBot}/.build/debug/CLI",
             "args": [],
-            "cwd": "${workspaceFolder:ManifoldTradingBot}",
+            "cwd": "${workspaceFolder:ManifoldTradingBot}/Sources/CLI",
             "preLaunchTask": "swift: Build Debug CLI"
         },
         {
@@ -21,7 +21,7 @@
             "name": "Release CLI",
             "program": "${workspaceFolder:ManifoldTradingBot}/.build/release/CLI",
             "args": [],
-            "cwd": "${workspaceFolder:ManifoldTradingBot}",
+            "cwd": "${workspaceFolder:ManifoldTradingBot}/Sources/CLI",
             "preLaunchTask": "swift: Build Release CLI"
         }
     ]

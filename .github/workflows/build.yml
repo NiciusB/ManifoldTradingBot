@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: fwal/setup-swift@v1
       - uses: actions/checkout@v3
