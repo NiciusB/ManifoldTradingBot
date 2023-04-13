@@ -37,14 +37,14 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ManifoldTradingBot-release
-          path: ManifoldTradingBot-release
+          path: release-artifact
       - name: Copy artifact via ssh
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: ManifoldTradingBot-release/*
+          source: release-artifact/ManifoldTradingBot-release/*
           target: ManifoldTradingBot
       - name: Copy service
         uses: appleboy/scp-action@v0.1.4
@@ -52,8 +52,8 @@ jobs:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: scripts/server/deploy.service
-          target: /etc/systemd/system/manifold-trading-bot.service
+          source: "scripts/server/manifold-trading-bot.service"
+          target: /etc/systemd/system
       - name: Restart service using the new binary
         uses: appleboy/ssh-action@v0.1.10
         with:
