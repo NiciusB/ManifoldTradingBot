@@ -2,3 +2,4 @@
 .env.*
 .build/
 .swiftpm/
+CLI_build/

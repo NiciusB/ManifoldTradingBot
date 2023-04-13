@@ -2,7 +2,8 @@ import Foundation
 import Alamofire
 import SwiftSoup
 
-class SharesOutstandingApi {
+// I don't think this class is actually thread-safe, but it shouldn't cause problems because we mostly use it sequentially
+final class SharesOutstandingApi: @unchecked Sendable {
     var cachedOutstandingSharesValues: [String: (Date, Int?)] = [:]
     
     func getSymbolOutstandingShares(_ symbol: String) async -> Int? {
@@ -23,7 +24,8 @@ class SharesOutstandingApi {
             let request = AF.request(
                 urlPath,
                 method: .get,
-                headers: headers
+                headers: headers,
+                requestModifier: { $0.timeoutInterval = 10 }
             )
             
             let dataTask = request.serializingData()

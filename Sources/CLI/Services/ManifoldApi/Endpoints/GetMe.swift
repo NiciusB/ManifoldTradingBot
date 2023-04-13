@@ -2,10 +2,10 @@ import Foundation
 import Alamofire
 
 struct GetMe: ManifoldApiEndpoint {
-    var method = HTTPMethod.get
-    var path = "/v0/me"
-    var body: String?
-    var responseDecodable = Root.self
+    let method = HTTPMethod.get
+    let path = "/v0/me"
+    let body: String? = nil
+    let responseDecodable = Root.self
 
     struct Root: Decodable {
         let achievements: Achievements

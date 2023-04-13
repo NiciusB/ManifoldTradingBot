@@ -5,7 +5,8 @@ import Foundation
 import AnyCodable
 import NIOWebSocket
 
-class AlpacaApi {
+// I don't think this class is actually thread-safe, but it shouldn't cause problems because we mostly use it sequentially
+final class AlpacaApi: @unchecked Sendable {
     let apiEndpoint: String
     let apiKey: String
     let apiSecret: String
@@ -35,7 +36,11 @@ class AlpacaApi {
         webSocket.resume()
         
         self.connectionTask = Task {
-            try await self.receive()
+            do {
+                try await self.receive()
+            } catch {
+                printErr(error)
+            }
         }
         
         try? await loginTask.value

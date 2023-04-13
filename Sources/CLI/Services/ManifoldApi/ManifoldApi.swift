@@ -1,7 +1,7 @@
 import Foundation
 import Alamofire
 
-struct ManifoldApi {
+struct ManifoldApi: Sendable {
     let apiKey: String
     
     private func request<E: ManifoldApiEndpoint>(_ endpoint: E, logResponse: Bool = false) async throws -> E.ResDec {
@@ -17,7 +17,8 @@ struct ManifoldApi {
             method: endpoint.method,
             parameters: parameters,
             encoder: JSONParameterEncoder.default,
-            headers: headers
+            headers: headers,
+            requestModifier: { $0.timeoutInterval = 10 }
         )
         
         if logResponse {
@@ -53,6 +54,7 @@ struct ManifoldApi {
         return try await self.request(GetMe())
     }
     
+    @discardableResult
     func placeBet(
         amount: Int, contractId: String, outcome: String, limitProb: Float? = nil
     ) async throws -> PlaceBet.ResDec {
@@ -72,6 +74,7 @@ struct ManifoldApi {
         let message: String?
         let error: String?
     }
+
     enum ManifoldApiError: Error {
         case invalidRequest(message: String)
         case unableToDecodeResponse(decodingError: DecodingError, response: String)

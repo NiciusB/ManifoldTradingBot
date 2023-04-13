@@ -4,4 +4,4 @@ disabled_rules:
    - line_length
 
 excluded:
-   - .build/*
+   - .build

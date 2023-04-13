@@ -8,6 +8,6 @@ struct RuntimeError: LocalizedError {
     }
 
     var errorDescription: String? {
-        description
+        return description
     }
 }

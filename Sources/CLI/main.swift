@@ -2,21 +2,24 @@ import Dotenv
 import Alamofire
 import Foundation
 
-let mainApp = try MainApp()
-try await mainApp.start()
+print("Starting app...")
 
-class MainApp {
-    private var manifoldApi: ManifoldApi
-    private var alpacaApi: AlpacaApi
-    private var sharesOutstandingApi: SharesOutstandingApi
-    private var marketsDb: [Market]
+let mainApp = try await MainApp()
+mainApp.startAppLogicLoopTimer()
+try await mainApp.alpacaApi.waitUntilConnectionEnd()
+
+final class MainApp: Sendable {
+    private let manifoldApi: ManifoldApi
+    let alpacaApi: AlpacaApi
+    private let sharesOutstandingApi: SharesOutstandingApi
+    private let marketsDb: [Market]
     
     private struct Market {
         var id: String
         var realStockSymbol: String
     }
     
-    init() throws {
+    init() async throws {
         let dotenv = try Dotenv()
         let manifoldApi = ManifoldApi(
             apiKey: dotenv.get("MANIFOLD_API_KEY")!
@@ -35,28 +38,31 @@ class MainApp {
             Market(id: "aZn4kn9dIv5wjQSbVzdk", realStockSymbol: "AAPL"),
             Market(id: "qy4Pujoc7k2G03cb7Vnh", realStockSymbol: "AMZN"),
             Market(id: "RnzTxpnUSsbfPG8Ec6BO", realStockSymbol: "GOOG"),
-            Market(id: "78LK7lYi6fgGHMWvCG8j", realStockSymbol: "MSFT")
+            Market(id: "1IBrgJ6IlwBIaJ7xdQ5c", realStockSymbol: "MSFT")
         ]
-    }
 
-    func start() async throws {
         let stocksToTrack = marketsDb.map { market in market.realStockSymbol}
+        
+        print("Connecting to Alpaca API to track: \(stocksToTrack)...")
         
         try await alpacaApi.connect()
         try await alpacaApi.subscribe(
             trades: stocksToTrack
         )
         
-        print("Tracking: \(stocksToTrack)")
+        print("Connected to Alpaca API")
+    }
 
-        Task {
-            while true {
-                try await self.runAppLogicLoop()
-                try await Task.sleep(nanoseconds: 1000 * 1000 * 1000 * 30)
+    func startAppLogicLoopTimer() {
+        Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
+            Task {
+                do {
+                    try await self.runAppLogicLoop()
+                } catch {
+                    printErr(error)
+                }
             }
-        }
-        
-        try await alpacaApi.waitUntilConnectionEnd()
+        })
     }
     
     private func runAppLogicLoop() async throws {
@@ -73,9 +79,12 @@ class MainApp {
             print("We have no stock data for any market. That's probably because the markets closed right now, so we don't get realtime data. And we don't poll for historic data for now, so just wait until they open")
             return
         }
-        
+
+        print("Getting data from manifold API for \(realTradeValues.count) markets...")
         let manifoldMarkets = try await getManifoldMarkets(realTradeValues.map { (market, _) in market.id })
-        let outstandingShares = try await getOutstandingShares(realTradeValues.map { (market, _) in market.realStockSymbol })
+
+        print("Getting data from outstanding shares website...")
+        let outstandingShares = await getOutstandingShares(realTradeValues.map { (market, _) in market.realStockSymbol })
         
         for (market, lastStockTradeValue) in realTradeValues {
             let manifoldMarket = manifoldMarkets[market.id]!
@@ -91,42 +100,28 @@ class MainApp {
 
             let (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(manifoldMarket, targetValue: targetMarketValue)
             
-            print("\(market.realStockSymbol) (\(manifoldMarket.url)): Betting $\(betAmount) on \(outcome) (Found current value \(currentMarketValue) VS expected value \(targetMarketValue))")
             if betAmount >= 1 {
-                _  = try await manifoldApi.placeBet(amount: betAmount, contractId: manifoldMarket.id, outcome: outcome)
+                print("\(market.realStockSymbol) (\(manifoldMarket.url)): Found current value \(currentMarketValue) VS expected value \(targetMarketValue). Betting $\(betAmount) on \(outcome)")
+                try await manifoldApi.placeBet(amount: betAmount, contractId: manifoldMarket.id, outcome: outcome)
             }
         }
+
+        print("Betting round done!")
     }
     
     private func getManifoldMarkets(_ manifoldMarketIds: [String]) async throws -> [String: GetMarket.ResDec] {
-        return try await withThrowingTaskGroup(of: (String, GetMarket.ResDec).self, body: { group in
-            for marketId in manifoldMarketIds {
-                group.addTask {
-                    return try await (marketId, self.manifoldApi.getMarket(marketId))
-                }
-            }
-            
-            var result: [String: GetMarket.ResDec] = [:]
-            for try await (marketId, manifoldMarket) in group {
-                result[marketId] = manifoldMarket
-            }
-            return result
-        })
+        var result: [String: GetMarket.ResDec] = [:]
+        for marketId in manifoldMarketIds {
+            result[marketId] = try await self.manifoldApi.getMarket(marketId)
+        }
+        return result
     }
     
-    private func getOutstandingShares(_ realStockSymbols: [String]) async throws -> [String: Int?] {
-        return try await withThrowingTaskGroup(of: (String, Int?).self, body: { group in
-            for symbol in realStockSymbols {
-                group.addTask {
-                    return await (symbol, self.sharesOutstandingApi.getSymbolOutstandingShares(symbol))
-                }
-            }
-            
-            var result: [String: Int?] = [:]
-            for try await (marketId, outstandingShares) in group {
-                result[marketId] = outstandingShares
-            }
-            return result
-        })
+    private func getOutstandingShares(_ realStockSymbols: [String]) async -> [String: Int?] {
+        var result: [String: Int?] = [:]
+        for symbol in realStockSymbols {
+            result[symbol] = await self.sharesOutstandingApi.getSymbolOutstandingShares(symbol)
+        }
+        return result
     }
 }

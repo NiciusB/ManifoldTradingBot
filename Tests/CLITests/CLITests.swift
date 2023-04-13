@@ -20,7 +20,7 @@ final class CLITests: XCTestCase {
     }
     
     func testCalculatesCorrectSharesToBuy() throws {
-        let market: GetMarket.ResDec = GetMarket.ResDec(
+        let googMarket: GetMarket.ResDec = GetMarket.ResDec(
             id: "id-1234",
             creatorId: "id-1234",
             creatorUsername: "creator",
@@ -30,7 +30,57 @@ final class CLITests: XCTestCase {
             closeTime: Float(Date().timeIntervalSince1970.magnitude) + 1000 * 60 * 24,
             question: "Example question",
             tags: ["Bets"],
-            url: "https://example.com/market/XYZ",
+            url: "https://manifold.markets/PatMyron/current-alphabet-google-market-cap",
+            pool: GetMarket.Pool(YES: 427.39884559678626, NO: 469.26700725062585),
+            probability: 0.1381288306058536,
+            p: 0.12733858779397111,
+            totalLiquidity: 481,
+            outcomeType: "PSEUDO_NUMERIC",
+            mechanism: "cpmm-1",
+            volume: 509.2376203441685,
+            volume24Hours: 21.497127860332313,
+            isResolved: false,
+            lastUpdatedTime: Float(Date().timeIntervalSince1970.magnitude) - 1000 * 60 * 24,
+            value: 1381.90,
+            min: 0,
+            max: 10000,
+            isLogScale: false,
+            description: GetMarket.Description(content: [], type: ""),
+            coverImageUrl: "https://example.com/cover.jpg",
+            textDescription: "Example description"
+        )
+        
+        var (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(googMarket, targetValue: 1372.9418)
+        
+        XCTAssertEqual(outcome, "NO", "Bet should be no")
+        XCTAssertEqual(betAmount, 3, "Bet should be specific number")
+
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(googMarket, targetValue: 1390)
+        
+        XCTAssertEqual(outcome, "YES", "Bet should be yes")
+        XCTAssertEqual(betAmount, 0, "Bet should be specific number")
+
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(googMarket, targetValue: 1450)
+        
+        XCTAssertEqual(outcome, "YES", "Bet should be yes")
+        XCTAssertEqual(betAmount, 3, "Bet should be specific number")
+
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(googMarket, targetValue: 2910)
+        
+        XCTAssertEqual(outcome, "YES", "Bet should be yes")
+        XCTAssertEqual(betAmount, 60, "Bet should be specific number")
+
+        let syntheticFakeMarket: GetMarket.ResDec = GetMarket.ResDec(
+            id: "id-1234",
+            creatorId: "id-1234",
+            creatorUsername: "creator",
+            creatorName: "Creator",
+            createdTime: Float(Date().timeIntervalSince1970.magnitude),
+            creatorAvatarUrl: "https://example.com/avatar.jpg",
+            closeTime: Float(Date().timeIntervalSince1970.magnitude) + 1000 * 60 * 24,
+            question: "Example question",
+            tags: ["Bets"],
+            url: "https://example.com/syntheticFakeMarket/XYZ",
             pool: GetMarket.Pool(YES: 300, NO: 400),
             probability: 0.45,
             p: 0.4,
@@ -50,24 +100,24 @@ final class CLITests: XCTestCase {
             textDescription: "Example description"
         )
         
-        var (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(market, targetValue: 100)
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(syntheticFakeMarket, targetValue: 100)
         
-        XCTAssertEqual(outcome, "NO", "Bet should be yes")
-        XCTAssertEqual(betAmount, 5161, "Bet should be specific number")
+        XCTAssertEqual(outcome, "NO", "Bet should be no")
+        XCTAssertEqual(betAmount, 4269, "Bet should be specific number")
         
-        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(market, targetValue: 1234)
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(syntheticFakeMarket, targetValue: 1234)
         
-        XCTAssertEqual(outcome, "NO", "Bet should be yes")
-        XCTAssertEqual(betAmount, 767, "Bet should be specific number")
+        XCTAssertEqual(outcome, "NO", "Bet should be no")
+        XCTAssertEqual(betAmount, 593, "Bet should be specific number")
         
-        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(market, targetValue: 5000)
-        
-        XCTAssertEqual(outcome, "YES", "Bet should be yes")
-        XCTAssertEqual(betAmount, 0, "Bet should be specific number")
-        
-        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(market, targetValue: 9000)
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(syntheticFakeMarket, targetValue: 5000)
         
         XCTAssertEqual(outcome, "YES", "Bet should be yes")
-        XCTAssertEqual(betAmount, 492, "Bet should be specific number")
+        XCTAssertEqual(betAmount, 32, "Bet should be specific number")
+        
+        (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(syntheticFakeMarket, targetValue: 9000)
+        
+        XCTAssertEqual(outcome, "YES", "Bet should be yes")
+        XCTAssertEqual(betAmount, 596, "Bet should be specific number")
     }
 }

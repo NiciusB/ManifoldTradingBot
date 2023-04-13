@@ -15,50 +15,57 @@ struct CpmmMarketUtils {
     static func calculatePseudoNumericMarketplaceValue(_ market: GetMarket.ResDec) -> Float {
         assert(market.outcomeType == "PSEUDO_NUMERIC", "Unexpected outcomeType \(market.outcomeType). Stopping to prevent messing up the formulas and betting wrong")
         assert(market.mechanism == "cpmm-1", "Unexpected mechanism \(market.outcomeType). Stopping to prevent messing up the formulas and betting wrong")
+        let marketProbability = market.probability!
+        let marketMin: Float = market.min!
+        let marketMax = market.max!
         
+        // Sanity check
         let calculatedProbability = CpmmMarketUtils.calcMarketProbabilityFromMarketP(market.p, pool: market.pool)
         assert(
-            abs(calculatedProbability - market.probability) < 0.001,
-            "Sanity check error: Differing probabilities \(calculatedProbability) vs \(market.probability), diff \(abs(calculatedProbability - market.probability)) is greater than 0.001. Formulas might have changed. Stopping to prevent messing up the formulas and betting wrong"
+            abs(calculatedProbability - marketProbability) < 0.001,
+            "Sanity check error: Differing probabilities \(calculatedProbability) vs \(marketProbability), diff \(abs(calculatedProbability - marketProbability)) is greater than 0.001. Formulas might have changed. Stopping to prevent messing up the formulas and betting wrong"
         )
         
         // PSEUDO_NUMERIC value formulas based on market's cpmm probability, min and max. Formulas from https://github.com/manifoldmarkets/manifold/blob/main/common/src/pseudo-numeric.ts#L13
-        if market.isLogScale {
-            return pow(10, market.probability * log10(market.max - market.min + 1)) + market.min - 1
+        if market.isLogScale! {
+            return pow(10, marketProbability * log10(marketMax - marketMin + 1)) + marketMin - 1
         } else {
-            return market.probability * (market.max - market.min) + market.min
+            return marketProbability * (marketMax - marketMin) + marketMin
         }
     }
     
     static func calculatePseudoNumericMarketplaceBet(_ market: GetMarket.ResDec, targetValue: Float) -> (String, Int) {
         assert(market.outcomeType == "PSEUDO_NUMERIC", "Unexpected outcomeType \(market.outcomeType). Stopping to prevent messing up the formulas and betting wrong")
         assert(market.mechanism == "cpmm-1", "Unexpected mechanism \(market.outcomeType). Stopping to prevent messing up the formulas and betting wrong")
+        let marketProbability = market.probability!
+        let marketMin: Float = market.min!
+        let marketMax = market.max!
         
         // Manually inversed PSEUDO_NUMERIC value formulas from calculatePseudoNumericMarketplaceValue, to solve for market cpmm probability based on a target value
         let targetProbability: Float
-        if market.isLogScale {
-            targetProbability = log(targetValue - market.min + 1) / log(10) / log10(market.max - market.min + 1)
+        if market.isLogScale! {
+            targetProbability = log(targetValue - marketMin + 1) / log(10) / log10(marketMax - marketMin + 1)
             
             print(
                 "First I got from wolframalpha, second I solved myself",
-                log(targetValue - market.min + 1) / log(market.max - market.min + 1),
-                log(targetValue - market.min + 1) / log(10) / log10(market.max - market.min + 1)
+                log(targetValue - marketMin + 1) / log(marketMax - marketMin + 1),
+                log(targetValue - marketMin + 1) / log(10) / log10(marketMax - marketMin + 1)
             )
             
             assert(false, "The code should work for logScale with minor fixes but it's not tested so idk, just crash for now")
         } else {
-            targetProbability = (targetValue - market.min) / (market.max - market.min)
+            targetProbability = (targetValue - marketMin) / (marketMax - marketMin)
         }
         
         // Manually inversed formulas from calculatePseudoNumericMarketplaceValue, to solve for YES/NO votes on a target cpmm probability
-        let outcome = market.probability < targetProbability ? "YES" : "NO"
+        let outcome = marketProbability < targetProbability ? "YES" : "NO"
         
         let amount = calculateCpmmAmountToProb(
             state: CpmmMarketUtils.CpmmState(
-                p: CpmmMarketUtils.calcMarketPFromMarketProbability(market.probability, pool: market.pool),
+                p: CpmmMarketUtils.calcMarketPFromMarketProbability(marketProbability, pool: market.pool),
                 pool: Pool(YES: market.pool.YES, NO: market.pool.NO)
             ),
-            prob: CpmmMarketUtils.calcMarketPFromMarketProbability(targetProbability, pool: market.pool),
+            prob: targetProbability,
             outcome: outcome
         )
         
