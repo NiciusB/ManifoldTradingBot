@@ -8,6 +8,8 @@ rm Package.swift
 mv Package.swift.bak Package.swift
 
 rm -rf CLI_build
-mkdir -p CLI_build 
-cp -P .build/release/CLI CLI_build/
-cp -P /usr/lib/swift/linux/lib*so* CLI_build/
+mkdir -p CLI_build
+mkdir -p CLI_build/bin
+cp -P .build/release/CLI CLI_build/bin/
+cp -P /usr/lib/swift/linux/lib*so* CLI_build/bin/
+ln -s /CLI_build/bin/CLI /CLI_build/CLI

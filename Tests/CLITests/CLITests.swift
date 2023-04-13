@@ -19,6 +19,7 @@ final class CLITests: XCTestCase {
         }
     }
     
+    // swiftlint:disable:next function_body_length
     func testCalculatesCorrectSharesToBuy() throws {
         let googMarket: GetMarket.ResDec = GetMarket.ResDec(
             id: "id-1234",

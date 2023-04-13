@@ -17,8 +17,7 @@ jobs:
             swift:5.8.0-bionic  \
             /bin/bash -cl '\
             swift --version &&\
-            ./scripts/build_release.sh
-            mv .build/CLI_build/ CLI_build/'
+            ./scripts/build_release.sh'
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
