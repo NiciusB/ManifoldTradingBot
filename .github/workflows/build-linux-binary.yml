@@ -38,14 +38,24 @@ jobs:
         with:
           name: ManifoldTradingBot-release
           path: release-artifact
+      - run: find -maxdepth 2 -ls
       - name: Copy artifact via ssh
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: release-artifact/ManifoldTradingBot-release/*
+          source: release-artifact/*
           target: ManifoldTradingBot
+      - name: Move artifact output to correct folder
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            mv ManifoldTradingBot ManifoldTradingBot.bak
+            mv ManifoldTradingBot.bak/ManifoldTradingBot-release ManifoldTradingBot
       - name: Copy service
         uses: appleboy/scp-action@v0.1.4
         with:
