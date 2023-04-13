@@ -3,6 +3,7 @@ Description=manifold-trading-bot
 
 [Service]
 Type=simple
+User=manifoldbot
 Restart=always
 RestartSec=5
 ExecStart=/home/manifoldbot/ManifoldTradingBot/bin/CLI
