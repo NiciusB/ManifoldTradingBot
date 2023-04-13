@@ -44,7 +44,7 @@ jobs:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: release-artifact/*
+          source: "release-artifact/"
           target: ManifoldTradingBot
       - name: Copy service
         uses: appleboy/scp-action@v0.1.4
@@ -53,7 +53,7 @@ jobs:
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           source: "scripts/server/manifold-trading-bot.service"
-          target: ./
+          target: temp_folder
       - name: Finishing up
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -68,7 +68,8 @@ jobs:
             chmod 777 ManifoldTradingBot/bin/CLI
 
             # Restart service
-            sudo mv manifold-trading-bot.service /etc/systemd/system/manifold-trading-bot.service
+            sudo mv temp_folder/scripts/server/manifold-trading-bot.service /etc/systemd/system/manifold-trading-bot.service
+            rm -rf temp_folder
             sudo systemctl daemon-reload
             sudo systemctl restart manifold-trading-bot
             sudo systemctl enable manifold-trading-bot
