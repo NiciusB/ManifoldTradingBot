@@ -2,7 +2,7 @@ import Foundation
 import Alamofire
 import SwiftSoup
 
-class SharesOutstandingHistoryApi {
+class SharesOutstandingApi {
     var cachedOutstandingSharesValues: [String: (Date, Int?)] = [:]
     
     func getSymbolOutstandingShares(_ symbol: String) async -> Int? {
@@ -16,10 +16,9 @@ class SharesOutstandingHistoryApi {
         }
         
         do {
-            let urlPath = "https://www.sharesoutstandinghistory.com/?symbol=" + symbol
+            let urlPath = "https://stockanalysis.com/stocks/\(symbol)/statistics/"
             let headers = HTTPHeaders([
-                "User-Agent": "ManifoldTradingBot/1.0.0 for @NiciusBot",
-                "Accept": "application/json"
+                "User-Agent": "ManifoldTradingBot/1.0.0 for @NiciusBot"
             ])
             let request = AF.request(
                 urlPath,
@@ -32,10 +31,9 @@ class SharesOutstandingHistoryApi {
             let resData = try dataResponse.result.get()
             let htmlString = String(data: resData, encoding: String.Encoding.utf8)!
             let doc = try SwiftSoup.parse(htmlString)
-            let lastSharedGraphBar = try doc.getElementsByClass("dtbl").last()!
-            let onMouseOverAttr = try lastSharedGraphBar.attr("onmouseover")
-            let unparsedSharesAmount = onMouseOverAttr.firstMatch(of: /— (.*) shares/)!.1
-            let parsedAmount = Int(unparsedSharesAmount.replacingOccurrences(of: ",", with: ""))
+            let sharesOutstandingRow = try doc.getElementsMatchingOwnText("Shares Outstanding").first()?.parent()?.nextElementSibling()
+            let titleAttr = try sharesOutstandingRow!.attr("title")
+            let parsedAmount = Int(titleAttr.replacingOccurrences(of: ",", with: ""))
             self.cachedOutstandingSharesValues[symbol] = (Date(), parsedAmount)
             return parsedAmount
         } catch {

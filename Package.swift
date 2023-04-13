@@ -31,7 +31,8 @@ let package = Package(
         .package(
             url: "https://github.com/realm/SwiftLint.git",
             from: "0.51.0"
-        )
+        ),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.50.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -42,7 +43,8 @@ let package = Package(
                 "AnyCodable",
                 "SwiftSoup",
                 "Alamofire",
-                .product(name: "Dotenv", package: "swift-dotenv")
+                .product(name: "Dotenv", package: "swift-dotenv"),
+                .product(name: "NIOWebSocket", package: "swift-nio")
             ],
             plugins: [
                 .plugin(name: "SwiftLintPlugin", package: "SwiftLint")
@@ -59,7 +61,7 @@ for target in package.targets {
   target.swiftSettings = target.swiftSettings ?? []
   target.swiftSettings?.append(
     .unsafeFlags([
-      // "-Xfrontend", "-warn-concurrency",
+      "-Xfrontend", "-warn-concurrency",
       "-Xfrontend", "-enable-actor-data-race-checks",
       "-enable-bare-slash-regex"
     ])

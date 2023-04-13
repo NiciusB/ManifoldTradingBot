@@ -6,10 +6,9 @@ let mainApp = try MainApp()
 try await mainApp.start()
 
 class MainApp {
-    private var lastTask: Task<Void, Error>?
     private var manifoldApi: ManifoldApi
     private var alpacaApi: AlpacaApi
-    private var sharesOutstandingHistoryApi: SharesOutstandingHistoryApi
+    private var sharesOutstandingApi: SharesOutstandingApi
     private var marketsDb: [Market]
     
     private struct Market {
@@ -27,12 +26,11 @@ class MainApp {
             apiKey: dotenv.get("ALPACA_API_KEY")!,
             apiSecret: dotenv.get("ALPACA_API_SECRET")!
         )
-        let sharesOutstandingHistoryApi = SharesOutstandingHistoryApi()
+        let sharesOutstandingApi = SharesOutstandingApi()
         
-        self.lastTask = nil
         self.manifoldApi = manifoldApi
         self.alpacaApi = alpacaApi
-        self.sharesOutstandingHistoryApi = sharesOutstandingHistoryApi
+        self.sharesOutstandingApi = sharesOutstandingApi
         self.marketsDb = [
             Market(id: "aZn4kn9dIv5wjQSbVzdk", realStockSymbol: "AAPL"),
             Market(id: "qy4Pujoc7k2G03cb7Vnh", realStockSymbol: "AMZN"),
@@ -50,18 +48,11 @@ class MainApp {
         )
         
         print("Tracking: \(stocksToTrack)")
-        
-        DispatchQueue.main.async {
-            Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
-                if self.lastTask == nil {
-                    self.lastTask = Task {
-                        defer {
-                            self.lastTask = nil
-                        }
-                        
-                        try await self.runAppLogicLoop()
-                    }
-                }
+
+        Task {
+            while true {
+                try await self.runAppLogicLoop()
+                try await Task.sleep(nanoseconds: 1000 * 1000 * 1000 * 30)
             }
         }
         
@@ -90,12 +81,17 @@ class MainApp {
             let manifoldMarket = manifoldMarkets[market.id]!
             let stockOutstandingShares = outstandingShares[market.realStockSymbol]!!
             
-            let expectedManifoldMarketValue = lastStockTradeValue * Float(stockOutstandingShares) / 1000 / 1000 / 1000 // Hardcoded division by 1B, as the markets I'm betting in use that
-            
+            let targetMarketValue: Float = lastStockTradeValue * Float(stockOutstandingShares) / 1000 / 1000 / 1000 // Hardcoded division by 1B, as the markets I'm betting in use that
             let currentMarketValue = CpmmMarketUtils.calculatePseudoNumericMarketplaceValue(manifoldMarket)
-            let (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(manifoldMarket, targetValue: expectedManifoldMarketValue)
+
+            if targetMarketValue / currentMarketValue >  1.2 || targetMarketValue / currentMarketValue <  0.8 {
+                print("\(market.realStockSymbol) (\(manifoldMarket.url)): Value difference too high, something must be wrong. (Found current value \(currentMarketValue) VS expected value \(targetMarketValue))")
+                continue
+            }
+
+            let (outcome, betAmount) = CpmmMarketUtils.calculatePseudoNumericMarketplaceBet(manifoldMarket, targetValue: targetMarketValue)
             
-            print("\(market.realStockSymbol) (\(manifoldMarket.url)): Betting $\(betAmount) on \(outcome) (Found current value \(currentMarketValue) VS expected value \(expectedManifoldMarketValue))")
+            print("\(market.realStockSymbol) (\(manifoldMarket.url)): Betting $\(betAmount) on \(outcome) (Found current value \(currentMarketValue) VS expected value \(targetMarketValue))")
             if betAmount >= 1 {
                 _  = try await manifoldApi.placeBet(amount: betAmount, contractId: manifoldMarket.id, outcome: outcome)
             }
@@ -122,7 +118,7 @@ class MainApp {
         return try await withThrowingTaskGroup(of: (String, Int?).self, body: { group in
             for symbol in realStockSymbols {
                 group.addTask {
-                    return await (symbol, self.sharesOutstandingHistoryApi.getSymbolOutstandingShares(symbol))
+                    return await (symbol, self.sharesOutstandingApi.getSymbolOutstandingShares(symbol))
                 }
             }
             

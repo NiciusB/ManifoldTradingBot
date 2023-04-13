@@ -1,15 +1,18 @@
 import Foundation
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 import AnyCodable
+import NIOWebSocket
 
 class AlpacaApi {
     let apiEndpoint: String
     let apiKey: String
     let apiSecret: String
-    // TODO: Migrate to https://swiftpackageindex.com/apple/swift-nio/main/documentation/niowebsocket to allow compiling for Linux
     private let webSocket: URLSessionWebSocketTask
     private let loginTask = Task(priority: .background) {
         while true {
-            try await Task.sleep(nanoseconds: 100000)
+            try await Task.sleep(nanoseconds: 1000 * 1000 * 100)
             await Task.yield()
         }
     }
@@ -57,25 +60,37 @@ class AlpacaApi {
             statuses: statuses
         )
         let data = try JSONEncoder().encode(subscribeMsg)
-        webSocket.send(URLSessionWebSocketTask.Message.data(data)) { error in
-            if error != nil {
-                print(error!)
-            }
-        }
+        try await webSocket.send(URLSessionWebSocketTask.Message.data(data))
     }
     
-    private func sendAuthMsg() throws {
+    private func sendAuthMsg() async throws {
         let authMsg = AlpacaApiClientMessages.Auth(key: self.apiKey, secret: self.apiSecret)
         let data = try JSONEncoder().encode(authMsg)
-        webSocket.send(URLSessionWebSocketTask.Message.data(data)) { error in
-            if error != nil {
-                print(error!)
-            }
-        }
+        try await webSocket.send(URLSessionWebSocketTask.Message.data(data))
     }
     
     func getStockLastTradeValue(_ stock: String) -> Float? {
         return lastTradeValues[stock]
+    }
+    
+    private func processMessage(_ decodedMsg: AlpacaApiServerMessages.AlpacaApiServerMessages) async throws {
+            switch decodedMsg {
+            case let .success(data):
+                if data.msg == "connected" {
+                    try await self.sendAuthMsg()
+                } else if data.msg == "authenticated" {
+                    loginTask.cancel()
+                }
+            case let .error(data):
+                print(data)
+            case .subscription:
+                // subscribed!
+                break
+            case let .trade(data):
+                lastTradeValues[data.S] = data.p
+            case let .quote(data):
+                print(data)
+            }
     }
     
     private func receive() async throws {
@@ -94,24 +109,8 @@ class AlpacaApi {
                 from: data
             )
             
-            try decoded.messages.forEach { decodedMsg in
-                switch decodedMsg {
-                case let .success(data):
-                    if data.msg == "connected" {
-                        try self.sendAuthMsg()
-                    } else if data.msg == "authenticated" {
-                        loginTask.cancel()
-                    }
-                case let .error(data):
-                    print(data)
-                case .subscription:
-                    // subscribed!
-                    break
-                case let .trade(data):
-                    lastTradeValues[data.S] = data.p
-                case let .quote(data):
-                    print(data)
-                }
+            for decodedMsg in decoded.messages {
+                try await self.processMessage(decodedMsg)
             }
             
         default:
