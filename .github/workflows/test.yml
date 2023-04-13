@@ -1,0 +1,18 @@
+name: Test CLI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test inside docker
+        run: |
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            --platform linux/amd64 \
+            swift:5.8  \
+            /bin/bash -cl '\
+            swift --version &&\
+            swift test'
