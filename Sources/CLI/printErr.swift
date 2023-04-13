@@ -7,7 +7,7 @@ extension FileHandle: TextOutputStream {
   }
 }
 
-func printErr(_ message: Any) {
+func printErr(_ items: Any...) {
     var standardError = FileHandle.standardError
-    print(message, to: &standardError)
+    print(items, to: &standardError)
 }

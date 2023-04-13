@@ -86,9 +86,13 @@ final class AlpacaApi: @unchecked Sendable {
                     try await self.sendAuthMsg()
                 } else if data.msg == "authenticated" {
                     loginTask.cancel()
+                } else {
+                    let dataString = try String(data: JSONEncoder().encode(data), encoding: .utf8)!
+                    throw RuntimeError("Unknown Alpaca API success message: " + dataString)
                 }
             case let .error(data):
-                print(data)
+                let dataString = try String(data: JSONEncoder().encode(data), encoding: .utf8)!
+                throw RuntimeError("Alpaca API error: " + dataString)
             case .subscription:
                 // subscribed!
                 break
@@ -103,7 +107,7 @@ final class AlpacaApi: @unchecked Sendable {
 // swiftlint:disable identifier_name
 // https://alpaca.markets/docs/api-references/market-data-api/stock-pricing-data/realtime/#server-to-client
 struct AlpacaApiServerMessages {
-    enum AlpacaApiServerMessageType: String, Decodable, CodingKey {
+    enum AlpacaApiServerMessageType: String, Codable, CodingKey {
         case success, error, subscription, t, q, b, d, s
     }
     
@@ -148,7 +152,7 @@ struct AlpacaApiServerMessages {
         }
     }
     
-    enum AlpacaApiServerMessages: Decodable {
+    enum AlpacaApiServerMessages: Codable {
         case success(AlpacaApiServerMessagesSuccess)
         case error(AlpacaApiServerMessagesError)
         case subscription(AlpacaApiServerMessagesSubscription)
@@ -156,22 +160,66 @@ struct AlpacaApiServerMessages {
         case quote(AlpacaApiServerMessagesQuote)
     }
     
-    struct AlpacaApiServerMessageBase: Decodable {
+    struct AlpacaApiServerMessageBase: Codable {
         var T: AlpacaApiServerMessageType
     }
     
-    struct AlpacaApiServerMessagesSuccess: Decodable {
+    struct AlpacaApiServerMessagesSuccess: Codable {
         var T: AlpacaApiServerMessageType = .success
         var msg: String
+        
+        enum CodingKeys: CodingKey {
+            case T
+            case msg
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container: KeyedDecodingContainer<AlpacaApiServerMessagesSuccess.CodingKeys> = try decoder.container(keyedBy: AlpacaApiServerMessagesSuccess.CodingKeys.self)
+            self.T = try container.decode(AlpacaApiServerMessageType.self, forKey: AlpacaApiServerMessagesSuccess.CodingKeys.T)
+            
+            if self.T != .success {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: container.codingPath,
+                        debugDescription: "AlpacaApiServerMessagesSubscription must have type \(AlpacaApiServerMessageType.success), found \(self.T)"
+                    )
+                )
+            }
+            
+            self.msg = try container.decode(String.self, forKey: AlpacaApiServerMessagesSuccess.CodingKeys.msg)
+        }
     }
     
-    struct AlpacaApiServerMessagesError: Decodable {
+    struct AlpacaApiServerMessagesError: Codable {
         var T: AlpacaApiServerMessageType = .error
         var msg: String
         var code: Int
+        
+        enum CodingKeys: CodingKey {
+            case T
+            case msg
+            case code
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container: KeyedDecodingContainer<AlpacaApiServerMessagesError.CodingKeys> = try decoder.container(keyedBy: AlpacaApiServerMessagesError.CodingKeys.self)
+            self.T = try container.decode(AlpacaApiServerMessageType.self, forKey: AlpacaApiServerMessagesError.CodingKeys.T)
+            
+            if self.T != .error {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: container.codingPath,
+                        debugDescription: "AlpacaApiServerMessagesSubscription must have type \(AlpacaApiServerMessageType.error), found \(self.T)"
+                    )
+                )
+            }
+            
+            self.msg = try container.decode(String.self, forKey: AlpacaApiServerMessagesError.CodingKeys.msg)
+            self.code = try container.decode(Int.self, forKey: AlpacaApiServerMessagesError.CodingKeys.code)
+        }
     }
     
-    struct AlpacaApiServerMessagesSubscription: Decodable {
+    struct AlpacaApiServerMessagesSubscription: Codable {
         var T: AlpacaApiServerMessageType = .subscription
         var trades: [String]?
         var quotes: [String]?
@@ -221,7 +269,7 @@ struct AlpacaApiServerMessages {
         }
     }
     
-    struct AlpacaApiServerMessagesTrade: Decodable {
+    struct AlpacaApiServerMessagesTrade: Codable {
         var T: AlpacaApiServerMessageType = .t
         var i: Int
         var S: String
@@ -233,7 +281,7 @@ struct AlpacaApiServerMessages {
         var z: String
     }
     
-    struct AlpacaApiServerMessagesQuote: Decodable {
+    struct AlpacaApiServerMessagesQuote: Codable {
         var T: AlpacaApiServerMessageType = .q
         var bx: String
         var ap: Float
