@@ -54,24 +54,21 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           source: "scripts/server/manifold-trading-bot.service"
           target: ./
-      - name: Move things to correct folder
+      - name: Finishing up
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           username: ${{ secrets.DEPLOY_SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            # Move new binary to correct folder, save old as .bak
+            rm -rf ManifoldTradingBot.bak
             mv ManifoldTradingBot ManifoldTradingBot.bak
             mv ManifoldTradingBot.bak/release-artifact ManifoldTradingBot
             chmod 777 ManifoldTradingBot/bin/CLI
+
+            # Restart service
             sudo mv manifold-trading-bot.service /etc/systemd/system/manifold-trading-bot.service
-      - name: Restart service using the new binary
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.DEPLOY_SSH_HOST }}
-          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
             sudo systemctl daemon-reload
             sudo systemctl restart manifold-trading-bot
             sudo systemctl enable manifold-trading-bot
