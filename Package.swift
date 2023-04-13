@@ -28,10 +28,7 @@ let package = Package(
             url: "https://github.com/Alamofire/Alamofire.git",
             from: "5.0.0"
         ),
-        .package(
-            url: "https://github.com/realm/SwiftLint.git",
-            from: "0.51.0"
-        ),
+        .package(url: "https://github.com/realm/SwiftLint.git", from: "0.51.0"),
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0")
     ],
     targets: [

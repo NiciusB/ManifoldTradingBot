@@ -2,10 +2,12 @@
 set -e
 
 # Remove SwiftLintPlugin which causes release build to fail
-sed -i.bak '/.plugin(name: "SwiftLintPlugin", package: "SwiftLint")/d' Package.swift
+trap "rm Package.swift && mv Package.swift.bak Package.swift; exit" INT TERM EXIT
+cp Package.swift Package.swift.bak
+sed -i '/.plugin(name: "SwiftLintPlugin", package: "SwiftLint")/d' Package.swift
+sed -i '/.package(url: "https:\/\/github.com\/realm\/SwiftLint.git", from: "0.51.0"),/d' Package.swift
+
 swift build -c release
-rm Package.swift
-mv Package.swift.bak Package.swift
 
 rm -rf CLI_build
 mkdir -p CLI_build
