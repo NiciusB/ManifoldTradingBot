@@ -21,6 +21,6 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: dist-without-markdown
+          name: ManifoldTradingBot-release
           path: |
-            CLI_build/
+            CLI_build
