@@ -23,4 +23,4 @@ jobs:
         with:
           name: dist-without-markdown
           path: |
-            .build/install
+            .build/CLI_build.tar.gz
