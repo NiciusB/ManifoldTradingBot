@@ -13,5 +13,5 @@ mkdir -p CLI_build/bin
 cp -P .build/release/CLI CLI_build/bin/
 cp -P /usr/lib/swift/linux/lib*so* CLI_build/bin/
 rm CLI_build/bin/lib_InternalSwiftScan.so
-ln -s CLI_build/bin/CLI CLI_build/CLI
-chmod 777 CLI_build/CLI
+chmod 777 CLI_build/bin/CLI
+echo "Run bin/CLI" > CLI_build/readme.txt

@@ -1,0 +1,44 @@
+name: Copy files to server and restart service
+on:
+  workflow_run:
+    workflows: ["Build linux binary"]
+    types: 
+      - completed
+
+jobs:
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: ManifoldTradingBot-release
+          path: ManifoldTradingBot-release
+      - name: Copy artifact via ssh
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: ManifoldTradingBot-release/*
+          target: ManifoldTradingBot
+      - name: Copy service
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: scripts/server/deploy.service
+          target: /etc/systemd/system/manifold-trading-bot.service
+      - name: Restart service using the new binary
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            sudo systemctl daemon-reload
+            sudo systemctl restart manifold-trading-bot
+            sudo systemctl enable manifold-trading-bot

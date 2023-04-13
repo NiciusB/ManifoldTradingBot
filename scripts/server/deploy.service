@@ -1,0 +1,12 @@
+[Unit]
+Description=manifold-trading-bot
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+ExecStart=/home/manifoldbot/ManifoldTradingBot/bin/CLI
+WorkingDirectory=/home/manifoldbot
+
+[Install]
+WantedBy=multi-user.target
