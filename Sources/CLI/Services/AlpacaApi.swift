@@ -3,51 +3,52 @@ import Foundation
     import FoundationNetworking
 #endif
 import AnyCodable
-import NIOWebSocket
+import Vapor
 
 // I don't think this class is actually thread-safe, but it shouldn't cause problems because we mostly use it sequentially
 final class AlpacaApi: @unchecked Sendable {
     let apiEndpoint: String
     let apiKey: String
     let apiSecret: String
-    private let webSocket: URLSessionWebSocketTask
+    private var webSocket: WebSocket?
     private let loginTask = Task(priority: .background) {
         while true {
             try await Task.sleep(nanoseconds: 1000 * 1000 * 100)
             await Task.yield()
         }
     }
-    private var connectionTask: Task<Void, Error>?
     private var lastTradeValues: [String: Float] = [:]
     
-    init(apiEndpoint: String, apiKey: String, apiSecret: String) {
+    init(apiEndpoint: String, apiKey: String, apiSecret: String) async throws {
         self.apiEndpoint = apiEndpoint
         self.apiSecret = apiSecret
         self.apiKey = apiKey
         
         let wsUrl = "wss://stream.data.alpaca.markets/v2/iex"
-        
-        let session = URLSession(configuration: URLSessionConfiguration.default)
-        
-        webSocket = session.webSocketTask(with: URL(string: wsUrl)!)
-    }
-    
-    func connect() async throws {
-        webSocket.resume()
-        
-        self.connectionTask = Task {
-            do {
-                try await self.receive()
-            } catch {
-                printErr(error)
-            }
+        let elg  = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        try await WebSocket.connect(to: wsUrl, on: elg ) { ws in
+            self.webSocket = ws
+            ws.onText({ _, strMessage in
+                Task {
+                    do {
+                        let data = strMessage.data(using: .utf8)!
+                        let decoded = try JSONDecoder().decode(
+                            AlpacaApiServerMessages.AlpacaApiServerMessageDecoder.self,
+                            from: data
+                        )
+                        
+                        for decodedMsg in decoded.messages {
+                            try await self.processMessage(decodedMsg)
+                        }
+                    } catch {
+                        printErr(error)
+                        exit(1)
+                    }
+                }
+            })
         }
         
         try? await loginTask.value
-    }
-    
-    func waitUntilConnectionEnd() async throws {
-        _ = try await self.connectionTask?.value
     }
     
     func subscribe(
@@ -65,13 +66,13 @@ final class AlpacaApi: @unchecked Sendable {
             statuses: statuses
         )
         let data = try JSONEncoder().encode(subscribeMsg)
-        try await webSocket.send(URLSessionWebSocketTask.Message.data(data))
+        try await webSocket!.send(String(data: data, encoding: .utf8)!)
     }
     
     private func sendAuthMsg() async throws {
         let authMsg = AlpacaApiClientMessages.Auth(key: self.apiKey, secret: self.apiSecret)
         let data = try JSONEncoder().encode(authMsg)
-        try await webSocket.send(URLSessionWebSocketTask.Message.data(data))
+        try await webSocket!.send(String(data: data, encoding: .utf8)!)
     }
     
     func getStockLastTradeValue(_ stock: String) -> Float? {
@@ -96,33 +97,6 @@ final class AlpacaApi: @unchecked Sendable {
             case let .quote(data):
                 print(data)
             }
-    }
-    
-    private func receive() async throws {
-        if self.webSocket.state != .running {
-            // Not connected, end receive loop
-            return
-        }
-        
-        let result = try await self.webSocket.receive()
-        
-        switch result {
-        case .string(let strMessage):
-            let data = strMessage.data(using: .utf8)!
-            let decoded = try JSONDecoder().decode(
-                AlpacaApiServerMessages.AlpacaApiServerMessageDecoder.self,
-                from: data
-            )
-            
-            for decodedMsg in decoded.messages {
-                try await self.processMessage(decodedMsg)
-            }
-            
-        default:
-            throw RuntimeError("Received data instead of string type for WebSocket message")
-        }
-        
-        try await self.receive()
     }
 }
 

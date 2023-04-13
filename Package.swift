@@ -32,7 +32,7 @@ let package = Package(
             url: "https://github.com/realm/SwiftLint.git",
             from: "0.51.0"
         ),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.50.0")
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -44,7 +44,7 @@ let package = Package(
                 "SwiftSoup",
                 "Alamofire",
                 .product(name: "Dotenv", package: "swift-dotenv"),
-                .product(name: "NIOWebSocket", package: "swift-nio")
+                .product(name: "Vapor", package: "vapor")
             ],
             plugins: [
                 .plugin(name: "SwiftLintPlugin", package: "SwiftLint")
