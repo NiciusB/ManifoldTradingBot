@@ -46,6 +46,11 @@ final class AlpacaApi: @unchecked Sendable {
                     }
                 }
             })
+            
+            ws.onClose.whenComplete { _ in
+                printErr("Alpaca Websocket closed")
+                exit(1)
+            }
         }
         
         try? await loginTask.value
