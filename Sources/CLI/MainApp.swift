@@ -60,13 +60,12 @@ final class MainApp: Sendable {
     }
     
     private func runAppLogicLoop() async throws {
-        let realTradeValues = self.marketsDb.compactMap { market -> (Market, Float)? in
-            let lastStockTradeValue = alpacaApi.getStockLastTradeValue(market.realStockSymbol)
-            if lastStockTradeValue == nil {
-                return nil
-            } else {
-                return (market, lastStockTradeValue!)
-            }
+        var realTradeValues: [(Market, Float)] = []
+        for market in self.marketsDb {
+                let lastStockTradeValue = try await alpacaApi.getStockLastTradeValue(market.realStockSymbol)
+                if lastStockTradeValue != nil {
+                    realTradeValues.append((market, lastStockTradeValue!))
+                }
         }
         
         if realTradeValues.isEmpty {

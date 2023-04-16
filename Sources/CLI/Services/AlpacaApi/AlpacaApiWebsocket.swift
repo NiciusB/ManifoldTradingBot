@@ -6,12 +6,11 @@ import AnyCodable
 import Vapor
 
 // I don't think this class is actually thread-safe, but it shouldn't cause problems because we mostly use it sequentially
-final class AlpacaApi: @unchecked Sendable {
-    let apiEndpoint: String
-    let apiKey: String
-    let apiSecret: String
+final class AlpacaApiWebsocket: @unchecked Sendable {
+    private let apiKey: String
+    private let apiSecret: String
     private var webSocket: WebSocket?
-    private let loginTask = Task(priority: .background) {
+    let loginTask = Task(priority: .background) {
         while true {
             try await Task.sleep(nanoseconds: 1000 * 1000 * 100)
             await Task.yield()
@@ -19,8 +18,7 @@ final class AlpacaApi: @unchecked Sendable {
     }
     private var lastTradeValues: [String: Float] = [:]
     
-    init(apiEndpoint: String, apiKey: String, apiSecret: String) async throws {
-        self.apiEndpoint = apiEndpoint
+    init(apiKey: String, apiSecret: String) async throws {
         self.apiSecret = apiSecret
         self.apiKey = apiKey
         
