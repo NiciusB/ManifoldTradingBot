@@ -47,7 +47,7 @@ final class MainApp: Sendable {
     }
 
     func startAppLogicLoopTimer() {
-        _ = Timer.scheduledTimer(withTimeInterval: 600.0, repeats: true, block: { _ in
+        _ = Timer.scheduledTimer(withTimeInterval: 1.0 * 60.0 * 60.0, repeats: true, block: { _ in
             Task {
                 do {
                     try await self.runAppLogicLoop()

@@ -21,7 +21,6 @@ struct GetMarket: ManifoldApiEndpoint {
       let creatorAvatarUrl: String
       let closeTime: Float
       let question: String
-      let tags: [String]
       let url: String
       let pool: Pool
       let probability: Float?
