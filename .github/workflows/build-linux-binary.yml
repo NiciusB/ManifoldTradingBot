@@ -15,7 +15,7 @@ jobs:
       - name: Build inside docker
         run: |
           docker run --rm \
-            -v "$PWD:/workspace" \
+            -v "$PWD/swift:/workspace" \
             -w /workspace \
             --platform linux/amd64 \
             swift:5.8.0-bionic  \
