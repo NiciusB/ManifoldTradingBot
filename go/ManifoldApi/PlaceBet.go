@@ -1,0 +1,58 @@
+package ManifoldApi
+
+import (
+	"bytes"
+	"encoding/json"
+	"log"
+)
+
+type PlaceBetRequest struct {
+	ContractId string  `json:"contractId"`
+	Outcome    string  `json:"outcome"`
+	Amount     int64   `json:"amount"`
+	LimitProb  float64 `json:"limitProb,omitempty"`
+	ExpiresAt  string  `json:"expiresAt,omitempty"`
+}
+
+type placeBetResponse struct {
+	OrderAmount int     `json:"orderAmount"`
+	Amount      float64 `json:"amount"`
+	Shares      float64 `json:"shares"`
+	IsFilled    bool    `json:"isFilled"`
+	IsCancelled bool    `json:"isCancelled"`
+	Fills       []struct {
+		MatchedBetID string  `json:"matchedBetId"`
+		Amount       float64 `json:"amount"`
+		Shares       float64 `json:"shares"`
+		Timestamp    int64   `json:"timestamp"`
+	} `json:"fills"`
+	ContractID  string  `json:"contractId"`
+	Outcome     string  `json:"outcome"`
+	ProbBefore  float64 `json:"probBefore"`
+	ProbAfter   float64 `json:"probAfter"`
+	LoanAmount  int     `json:"loanAmount"`
+	CreatedTime int64   `json:"createdTime"`
+	Fees        struct {
+		CreatorFee   int `json:"creatorFee"`
+		PlatformFee  int `json:"platformFee"`
+		LiquidityFee int `json:"liquidityFee"`
+	} `json:"fees"`
+	IsAnte       bool   `json:"isAnte"`
+	IsRedemption bool   `json:"isRedemption"`
+	IsChallenge  bool   `json:"isChallenge"`
+	Visibility   string `json:"visibility"`
+	BetID        string `json:"betId"`
+}
+
+func PlaceBet(bet PlaceBetRequest) placeBetResponse {
+	var body, error = json.Marshal(bet)
+	if error != nil {
+		log.Fatalln(error)
+	}
+
+	sb := callManifoldApi("POST", "v0/bet", bytes.NewBuffer(body))
+
+	var response placeBetResponse
+	json.Unmarshal([]byte(sb), &response)
+	return response
+}
