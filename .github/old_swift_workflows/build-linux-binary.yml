@@ -15,19 +15,19 @@ jobs:
       - name: Build inside docker
         run: |
           docker run --rm \
-            -v "$PWD/swift:/workspace" \
+            -v "$PWD/old_swift:/workspace" \
             -w /workspace \
             --platform linux/amd64 \
             swift:5.8.0-bionic  \
             /bin/bash -cl '\
             swift --version &&\
-            ./scripts/build_release_in_linux.sh'
+            ./old_swift/scripts/build_release_in_linux.sh'
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ManifoldTradingBot-release
           path: |
-            CLI_build
+            old_swift/CLI_build
   deploy:
     name: Deploy to server
     runs-on: ubuntu-latest

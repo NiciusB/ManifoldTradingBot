@@ -10,10 +10,10 @@ jobs:
       - name: Test inside docker
         run: |
           docker run --rm \
-            -v "$PWD/swift:/workspace" \
+            -v "$PWD/old_swift:/workspace" \
             -w /workspace \
             --platform linux/amd64 \
             swift:5.8  \
             /bin/bash -cl '\
             swift --version &&\
-            ./scripts/test_in_linux.sh'
+            ./old_swift/scripts/test_in_linux.sh'
