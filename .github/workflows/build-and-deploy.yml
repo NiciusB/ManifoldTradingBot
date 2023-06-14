@@ -22,14 +22,14 @@ jobs:
         run: |
              cd go
              go get .
-             go build -o CLI_build
+             CGO_ENABLED=0 go build -o manifoldtradingbot
         
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ManifoldTradingBot-release
           path: |
-            go/CLI_build
+            go/manifoldtradingbot
   deploy:
     name: Deploy to server
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
             rm -rf ManifoldTradingBot.bak
             mv ManifoldTradingBot ManifoldTradingBot.bak
             mv ManifoldTradingBot.bak/release-artifact ManifoldTradingBot
-            chmod 777 ManifoldTradingBot/bin/CLI
+            chmod 777 ManifoldTradingBot/manifoldtradingbot
 
             # Restart service
             sudo mv temp_folder/go/scripts/server/manifold-trading-bot.service /etc/systemd/system/manifold-trading-bot.service

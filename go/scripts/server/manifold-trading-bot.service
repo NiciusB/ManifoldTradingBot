@@ -6,7 +6,7 @@ Type=simple
 User=manifoldbot
 Restart=always
 RestartSec=5
-ExecStart=/home/manifoldbot/ManifoldTradingBot/bin/CLI
+ExecStart=/home/manifoldbot/ManifoldTradingBot/manifoldtradingbot
 WorkingDirectory=/home/manifoldbot
 
 [Install]

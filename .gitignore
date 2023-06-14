@@ -1,6 +1,12 @@
+# Go executable
+/go/manifoldtradingbot
+
+# Env
 .env
 .env.*
 !.env.example
+
+# Swift
 .build/
 .swiftpm/
 CLI_build/
