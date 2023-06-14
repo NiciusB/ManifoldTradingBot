@@ -61,7 +61,7 @@ func ConvertValueToProbability(market ManifoldApi.Market, value float64) float64
 	return targetProbability
 }
 
-func CalculatePseudoNumericMarketplaceBet(market ManifoldApi.Market, targetValue float64) (string, int64) {
+func CalculatePseudoNumericMarketplaceBet(market ManifoldApi.Market, targetValue float64, limitOrders map[float64]float64) (string, int64) {
 	assert(market.OutcomeType == "PSEUDO_NUMERIC", "Unexpected outcomeType (market.OutcomeType). Stopping to prevent messing up the formulas and betting wrong")
 	assert(market.Mechanism == "cpmm-1", "Unexpected mechanism (market.OutcomeType). Stopping to prevent messing up the formulas and betting wrong")
 	var marketProbability = market.Probability
@@ -75,23 +75,43 @@ func CalculatePseudoNumericMarketplaceBet(market ManifoldApi.Market, targetValue
 		outcome = "NO"
 	}
 
+	var cpmmState = cpmmState{
+		p:    calcMarketPFromMarketProbability(marketProbability, market.Pool),
+		pool: market.Pool,
+	}
 	var amount = calculateCpmmAmountToProb(
-		CpmmState{
-			p:    calcMarketPFromMarketProbability(marketProbability, market.Pool),
-			pool: market.Pool,
-		},
+		cpmmState,
 		targetProbability,
 		outcome,
 	)
+
+	for limitOrderProbability, limitOrderAmount := range limitOrders {
+		var wouldFill bool
+		if outcome == "YES" {
+			wouldFill = limitOrderProbability < targetProbability && limitOrderProbability > marketProbability
+		} else {
+			wouldFill = limitOrderProbability > targetProbability && limitOrderProbability < marketProbability
+		}
+
+		// I don't think this math is correct, but we're sending order limits anyway so we won't go over our wanted probability
+		if wouldFill {
+			// log.Printf("%v Filling limit order amount: %v prob: %v. Original amount: %v", market.ID, limitOrderAmount, limitOrderProbability, amount)
+			if outcome == "YES" {
+				amount += limitOrderAmount / (1 - limitOrderProbability)
+			} else {
+				amount += limitOrderAmount / limitOrderProbability
+			}
+		}
+	}
 
 	return outcome, int64(math.Round(amount))
 }
 
 // Following functions copied from https://github.com/manifoldmarkets/manifold/blob/0a71fdd0e3d684145022dcb9f27bb8bb14835d50/common/src/calculate-cpmm.ts and translated to Swift and then to Go
 
-const CREATOR_FEE float64 = 0
-const PLATFORM_FEE float64 = 0
-const LIQUIDITY_FEE float64 = 0
+const creatorFee float64 = 0
+const platformFee float64 = 0
+const liquidityFee float64 = 0
 
 func calculateCpmmShares(
 	pool pool,
@@ -109,7 +129,7 @@ func calculateCpmmShares(
 }
 
 func calculateCpmmAmountToProb(
-	state CpmmState,
+	state cpmmState,
 	prob float64,
 	outcome string,
 ) float64 {
@@ -142,7 +162,7 @@ func calculateCpmmAmountToProb(
 }
 
 func getCpmmOutcomeProbabilityAfterBet(
-	state CpmmState,
+	state cpmmState,
 	outcome string,
 	bet float64,
 ) float64 {
@@ -155,18 +175,18 @@ func getCpmmOutcomeProbabilityAfterBet(
 	}
 }
 
-type PurchaseInfo struct {
+type purchaseInfo struct {
 	shares  float64
 	newPool pool
 	newP    float64
-	fees    Fees
+	fees    fees
 }
 
 func calculateCpmmPurchase(
-	state CpmmState,
+	state cpmmState,
 	bet float64,
 	outcome string,
-) PurchaseInfo {
+) purchaseInfo {
 	var feesInfo = getCpmmFees(state, bet, outcome)
 
 	var shares = calculateCpmmShares(state.pool, state.p, feesInfo.remainingBet, outcome)
@@ -185,7 +205,7 @@ func calculateCpmmPurchase(
 
 	var addInfo = addCpmmLiquidity(postBet, state.p, feesInfo.fees.liquidityFee)
 
-	return PurchaseInfo{
+	return purchaseInfo{
 		shares:  shares,
 		newPool: addInfo.newPool,
 		newP:    addInfo.newP,
@@ -193,7 +213,7 @@ func calculateCpmmPurchase(
 	}
 }
 
-type AddCpmmLiquidityInfo struct {
+type addCpmmLiquidityInfo struct {
 	newPool   pool
 	newP      float64
 	liquidity float64
@@ -203,7 +223,7 @@ func addCpmmLiquidity(
 	pool pool,
 	p float64,
 	amount float64,
-) AddCpmmLiquidityInfo {
+) addCpmmLiquidityInfo {
 	var prob = getCpmmProbability(pool, p)
 
 	// https://www.wolframalpha.com/input?i=p%28n%2Bb%29%2F%28%281-p%29%28y%2Bb%29%2Bp%28n%2Bb%29%29%3Dq%2C+solve+p
@@ -217,7 +237,7 @@ func addCpmmLiquidity(
 	var newLiquidity = getCpmmLiquidity(newPool, newP)
 	var liquidity = newLiquidity - oldLiquidity
 
-	return AddCpmmLiquidityInfo{
+	return addCpmmLiquidityInfo{
 		newPool:   newPool,
 		liquidity: liquidity,
 		newP:      newP,
@@ -231,13 +251,13 @@ func getCpmmLiquidity(
 	return math.Pow(pool.YES, p) * math.Pow(pool.NO, (1-p))
 }
 
-type FeesInfo struct {
+type feesInfo struct {
 	remainingBet float64
 	totalFees    float64
-	fees         Fees
+	fees         fees
 }
 
-func getCpmmFees(state CpmmState, bet float64, outcome string) FeesInfo {
+func getCpmmFees(state cpmmState, bet float64, outcome string) feesInfo {
 	var prob = getCpmmProbabilityAfterBetBeforeFees(state, outcome, bet)
 
 	var betP float64
@@ -248,19 +268,19 @@ func getCpmmFees(state CpmmState, bet float64, outcome string) FeesInfo {
 		betP = prob
 	}
 
-	var liquidityFee = LIQUIDITY_FEE * betP * bet
-	var platformFee = PLATFORM_FEE * betP * bet
-	var creatorFee = CREATOR_FEE * betP * bet
-	var fees Fees = Fees{liquidityFee: liquidityFee, platformFee: platformFee, creatorFee: creatorFee}
+	var liquidityFee = liquidityFee * betP * bet
+	var platformFee = platformFee * betP * bet
+	var creatorFee = creatorFee * betP * bet
+	var fees fees = fees{liquidityFee: liquidityFee, platformFee: platformFee, creatorFee: creatorFee}
 
 	var totalFees = liquidityFee + platformFee + creatorFee
 	var remainingBet = bet - totalFees
 
-	return FeesInfo{remainingBet: remainingBet, totalFees: totalFees, fees: fees}
+	return feesInfo{remainingBet: remainingBet, totalFees: totalFees, fees: fees}
 }
 
 func getCpmmProbabilityAfterBetBeforeFees(
-	state CpmmState,
+	state cpmmState,
 	outcome string,
 	bet float64,
 ) float64 {
@@ -286,13 +306,13 @@ func getCpmmProbability(
 	return (p * pool.NO) / ((1-p)*pool.YES + p*pool.NO)
 }
 
-type Fees struct {
+type fees struct {
 	liquidityFee float64
 	platformFee  float64
 	creatorFee   float64
 }
 type pool = ManifoldApi.MarketPool
-type CpmmState struct {
+type cpmmState struct {
 	p    float64
 	pool pool
 }
