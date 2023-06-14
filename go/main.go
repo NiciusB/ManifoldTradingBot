@@ -30,7 +30,11 @@ func main() {
 		{manifoldId: "1IBrgJ6IlwBIaJ7xdQ5c", stockSymbol: "MSFT", marketCapToManifoldValueMultiplier: 0.000000001},
 	}
 
+	log.Println("Bot started up correctly! Now sleeping until first betting round")
+
 	for {
+		time.Sleep(time.Hour)
+
 		var wg sync.WaitGroup
 
 		log.Println("Starting betting round...")
@@ -46,8 +50,6 @@ func main() {
 		wg.Wait()
 
 		log.Println("Betting round done! Sleeping until next one")
-
-		time.Sleep(time.Hour)
 	}
 }
 
