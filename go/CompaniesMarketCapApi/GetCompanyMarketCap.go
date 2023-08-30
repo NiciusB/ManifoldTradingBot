@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type api8MarketCapResponse struct {
@@ -21,7 +20,7 @@ type api8MarketCapResponse struct {
 	LogoURL       string `json:"logo_url"`
 	LogoURLDark   string `json:"logo_url_dark"`
 	ImgPath       string `json:"imgPath"`
-	Marketcap     string `json:"marketcap"`
+	Marketcap     int    `json:"marketcap"`
 	MarketcapText string `json:"marketcapText"`
 	Price         string `json:"price"`
 	PriceText     string `json:"priceText"`
@@ -51,11 +50,7 @@ func GetCompanyMarketCap(stockSymbol string) (int, error) {
 
 	for _, item := range apiResponse {
 		if item.Ticker == stockSymbol {
-			marketCap, err := strconv.Atoi(item.Marketcap)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			return marketCap, nil
+			return item.Marketcap, nil
 		}
 	}
 

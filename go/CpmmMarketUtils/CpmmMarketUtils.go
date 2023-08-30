@@ -2,6 +2,7 @@ package CpmmMarketUtils
 
 import (
 	"ManifoldTradingBot/ManifoldApi"
+	"fmt"
 	"log"
 	"math"
 )
@@ -24,8 +25,8 @@ func calcMarketPFromMarketProbability(probability float64, pool pool) float64 {
 }
 
 func CalculatePseudoNumericMarketplaceValue(market ManifoldApi.Market) float64 {
-	assert(market.OutcomeType == "PSEUDO_NUMERIC", "Unexpected outcomeType (market.OutcomeType). Stopping to prevent messing up the formulas and betting wrong")
-	assert(market.Mechanism == "cpmm-1", "Unexpected mechanism (market.OutcomeType). Stopping to prevent messing up the formulas and betting wrong")
+	assert(market.OutcomeType == "PSEUDO_NUMERIC", fmt.Sprintf("Unexpected outcomeType (%s). Stopping to prevent messing up the formulas and betting wrong", market.OutcomeType))
+	assert(market.Mechanism == "cpmm-1", fmt.Sprintf("Unexpected mechanism (%s). Stopping to prevent messing up the formulas and betting wrong", market.Mechanism))
 	var marketProbability = market.Probability
 	var marketMin float64 = market.Min
 	var marketMax = market.Max
