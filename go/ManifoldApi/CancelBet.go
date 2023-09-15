@@ -27,6 +27,6 @@ func CancelBet(betId string) {
 	json.Unmarshal([]byte(sb), &response)
 
 	if response.ID == "" || !response.IsCancelled {
-		log.Fatalf("failed to cancel bet: %+v", sb)
+		log.Fatalf("failed to cancel bet: %+v", response)
 	}
 }

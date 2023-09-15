@@ -5,6 +5,7 @@ import (
 	"ManifoldTradingBot/CpmmMarketUtils"
 	"ManifoldTradingBot/ManifoldApi"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -32,8 +33,14 @@ func main() {
 
 	log.Println("Bot started up correctly! Now sleeping until first betting round")
 
+	var waitBeforeFirstBet = os.Getenv("WAIT_BEFORE_FIRST_BET") != "false"
+
+	var iteration = 0
 	for {
-		time.Sleep(time.Hour)
+		iteration++
+		if waitBeforeFirstBet || iteration > 1 {
+			time.Sleep(time.Hour)
+		}
 
 		var wg sync.WaitGroup
 
@@ -56,11 +63,15 @@ func main() {
 func runLogicForMarket(market Market) {
 	var betRequest = calculateBetForMarket(market)
 	if betRequest.Amount >= 1 {
-		var placedBet = ManifoldApi.PlaceBet(betRequest)
-		log.Printf("Placed bet #%v: %+v\n", placedBet.BetID, betRequest)
-		if !placedBet.IsFilled {
-			// Cancel instantly if it had limitProb
-			ManifoldApi.CancelBet(placedBet.BetID)
+		var placedBet, err = ManifoldApi.PlaceBet(betRequest)
+		if err != nil {
+			log.Printf("Error placing bet. Request: #%+v.\nResponse: %+v\n", betRequest, err)
+		} else {
+			log.Printf("Placed bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
+			if !placedBet.IsFilled {
+				// Cancel instantly if it had limitProb
+				ManifoldApi.CancelBet(placedBet.BetID)
+			}
 		}
 	}
 }

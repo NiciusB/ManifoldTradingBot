@@ -3,7 +3,7 @@ package ManifoldApi
 import (
 	"bytes"
 	"encoding/json"
-	"log"
+	"errors"
 )
 
 type PlaceBetRequest struct {
@@ -15,6 +15,7 @@ type PlaceBetRequest struct {
 }
 
 type placeBetResponse struct {
+	Message     string  `json:"message"`
 	OrderAmount int     `json:"orderAmount"`
 	Amount      float64 `json:"amount"`
 	Shares      float64 `json:"shares"`
@@ -44,15 +45,20 @@ type placeBetResponse struct {
 	BetID        string `json:"betId"`
 }
 
-func PlaceBet(bet PlaceBetRequest) placeBetResponse {
-	var body, error = json.Marshal(bet)
-	if error != nil {
-		log.Fatalln(error)
+func PlaceBet(bet PlaceBetRequest) (*placeBetResponse, error) {
+	var body, err = json.Marshal(bet)
+	if err != nil {
+		return nil, err
 	}
 
 	sb := callManifoldApi("POST", "v0/bet", bytes.NewBuffer(body))
 
 	var response placeBetResponse
 	json.Unmarshal([]byte(sb), &response)
-	return response
+
+	if response.Message != "" {
+		return nil, errors.New(response.Message)
+	}
+
+	return &response, nil
 }
