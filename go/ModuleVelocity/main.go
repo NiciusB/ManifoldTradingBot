@@ -4,12 +4,50 @@ import (
 	"ManifoldTradingBot/ManifoldApi"
 	"log"
 	"math"
+	"slices"
 	"sort"
 	"time"
 )
 
 var minProbSwing = 0.2
-var requestSecondsInterval int64 = 5
+var requestSecondsInterval int64 = 10
+var bannedUserIDs = []string{
+	"skGf6ln62qPPMIaxpRZG8JH9wbJ3",
+	"ilJdhpLzZZSUgzueJOs2cbRnJn82",
+	"jO7sUhIDTQbAJ3w86akzncTlpRG2",
+	"w1knZ6yBvEhRThYPEYTwlmGv7N33",
+	"BhNkw088bMNwIFF2Aq5Gg9NTPzz1",
+	"dNgcgrHGn8ZB30hyDARNtbjvGPm1",
+	"kzjQhRJ4GINn5umiq2ee1QvaMcE2",
+	"P7PV13rynzOHyxm8AiXIN568bmF2",
+	"jOl1FMKpFbXkoaDGp2qlakUxAiJ3",
+	"MxdyEeVgrFMTDDsPbXwAe9W1CLs2",
+	"IEVDP2LTpgMYaka38r1TVZcabWS2",
+	"4JuXgDx47xPagH5mcLDqLzUSN5g2",
+	"prSlKwvKkRfHCY43txO4pG1sFMT2",
+	"XebdFvo6vqO5WGXTsWYVdSH3WNc2",
+	"Y8xXwCCYe3cBCW5XeU8MxykuPAY2",
+	"ymezf2YMJ9aaILxT95uWJj7gnx83",
+	"Y96HJoD5tQaPgbKi5JEt5JuQJLN2",
+	"ffwIBb255DhSsJRh3VWZ4RY2pxz2",
+	"wjbOTRRJ7Ee5mjSMMYrtwoWuiCp2",
+	"EFzCw6YhqTYCJpeWHUG6p9JsDy02",
+	"UN5UGCJRQdfB3eQSnadiAxjkmRp2",
+	"9B5QsPTDAAcWOBW8NJNS7YdUjpO2",
+	"KIpsyUwgKmO1YXv2EJPXwGxaO533",
+	"VI8Htwx9JYeKeT6cUnH66XvBAv73",
+	"n820DjHGX9dKsrv0jHIJV8xmDgr2",
+	"w07LrYnLg8XDHySwrKxmAYAnLJH2",
+	"U7KQfJgJp1fa35k9EXpQCgvmmjh1",
+	"rVaQiGT7qCRfAD9QDQQ8SHxvvuu2",
+	"wuOtYy52f4Sx4JFfT85LpizVGsx1",
+	"I8VZW5hGw9cfIeWs7oQJaNdFwhL2",
+	"kydVkcfg7TU4zrrMBRx1Csipwkw2",
+	"QQodxPUTIFdQWJiIzVUW2ztF43e2",
+	"K2BeNvRj4beTBafzKLRCnxjgRlv1",
+	"zgCIqq8AmRUYVu6AdQ9vVEJN8On1",
+	"BB5ZIBNqNKddjaZQUnqkFCiDyTs2",
+}
 
 func Run() {
 	log.Println("Velocity module enabled!")
@@ -97,6 +135,11 @@ func getBestRecentBets() []ManifoldApi.Bet {
 
 		if timeNow-betTime > requestSecondsInterval {
 			// Ignore old bets
+			continue
+		}
+
+		if slices.Contains(bannedUserIDs, bet.UserID) {
+			// Do not act on this user
 			continue
 		}
 
