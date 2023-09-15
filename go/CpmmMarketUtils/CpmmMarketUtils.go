@@ -89,12 +89,12 @@ func CalculatePseudoNumericMarketplaceBet(market ManifoldApi.Market, targetValue
 	for limitOrderProbability, limitOrderAmount := range limitOrders {
 		var wouldFill bool
 		if outcome == "YES" {
-			wouldFill = limitOrderProbability < targetProbability && limitOrderProbability > marketProbability
+			wouldFill = limitOrderProbability <= targetProbability && limitOrderProbability >= marketProbability
 		} else {
-			wouldFill = limitOrderProbability > targetProbability && limitOrderProbability < marketProbability
+			wouldFill = limitOrderProbability >= targetProbability && limitOrderProbability <= marketProbability
 		}
 
-		// I don't think this math is correct, but we're sending order limits anyway so we won't go over our wanted probability
+		// I don't think this math is correct, it over estimates the amount needed, but we're sending order limits anyway so we won't go over our wanted probability
 		if wouldFill {
 			// log.Printf("%v Filling limit order amount: %v prob: %v. Original amount: %v", market.ID, limitOrderAmount, limitOrderProbability, amount)
 			if outcome == "YES" {

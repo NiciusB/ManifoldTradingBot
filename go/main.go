@@ -65,7 +65,7 @@ func runLogicForMarket(market Market) {
 	if betRequest.Amount >= 1 {
 		var placedBet, err = ManifoldApi.PlaceBet(betRequest)
 		if err != nil {
-			log.Printf("Error placing bet. Request: #%+v.\nResponse: %+v\n", betRequest, err)
+			log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
 		} else {
 			log.Printf("Placed bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
 			if !placedBet.IsFilled {
@@ -89,7 +89,8 @@ func calculateBetForMarket(market Market) ManifoldApi.PlaceBetRequest {
 
 	var outcome, amount = CpmmMarketUtils.CalculatePseudoNumericMarketplaceBet(manifoldMarket, expectedMarketValue, nil)
 
-	if amount >= 1 {
+	// 1 would be the minimum bet amount allowed by manifold, we do 3 to preserve mana due to placing bets via API fees
+	if amount >= 3 {
 		var limitOrdersSummary = ManifoldApi.GetOpenLimitOrdersSummary(market.manifoldId)
 
 		outcome, amount = CpmmMarketUtils.CalculatePseudoNumericMarketplaceBet(manifoldMarket, expectedMarketValue, limitOrdersSummary)
