@@ -16,6 +16,9 @@ type stockMarket struct {
 	marketCapToManifoldValueMultiplier float64
 }
 
+// 1 would be the minimum bet amount allowed by manifold, we do 3 to preserve mana due to placing bets via API fees
+var minimumAmountForBet int64 = 3
+
 func Run() {
 	log.Println("Stock module enabled!")
 
@@ -32,13 +35,13 @@ func Run() {
 	for {
 		iteration++
 		if waitBeforeFirstBet || iteration > 1 {
-			log.Println("Sleeping for an hour until next betting round...")
+			log.Println("Sleeping for an hour until next stock betting round...")
 			time.Sleep(time.Hour)
 		}
 
 		var wg sync.WaitGroup
 
-		log.Println("Starting betting round...")
+		log.Println("Starting stock betting round...")
 
 		for _, m := range marketsDb {
 			wg.Add(1)
@@ -50,22 +53,18 @@ func Run() {
 
 		wg.Wait()
 
-		log.Println("Betting round done!")
+		log.Println("Betting stock round done!")
 	}
 }
 
 func runLogicForMarket(market stockMarket) {
 	var betRequest = calculateBetForMarket(market)
-	if betRequest.Amount >= 1 {
-		var placedBet, err = ManifoldApi.PlaceBet(betRequest)
+	if betRequest.Amount >= minimumAmountForBet {
+		var placedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 		if err != nil {
 			log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
 		} else {
 			log.Printf("Placed bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
-			if !placedBet.IsFilled {
-				// Cancel instantly if it had limitProb
-				ManifoldApi.CancelBet(placedBet.BetID)
-			}
 		}
 	}
 }
@@ -83,8 +82,7 @@ func calculateBetForMarket(market stockMarket) ManifoldApi.PlaceBetRequest {
 
 	var outcome, amount = CpmmMarketUtils.CalculatePseudoNumericMarketplaceBet(manifoldMarket, expectedMarketValue, nil)
 
-	// 1 would be the minimum bet amount allowed by manifold, we do 3 to preserve mana due to placing bets via API fees
-	if amount >= 3 {
+	if amount >= minimumAmountForBet {
 		var limitOrdersSummary = ManifoldApi.GetOpenLimitOrdersSummary(market.manifoldId)
 
 		outcome, amount = CpmmMarketUtils.CalculatePseudoNumericMarketplaceBet(manifoldMarket, expectedMarketValue, limitOrdersSummary)

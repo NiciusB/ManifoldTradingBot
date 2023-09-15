@@ -4,21 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 type cancelBetRequest struct {
 	BetId string `json:"betId"`
 }
 
-func CancelBet(betId string) {
+func CancelBet(betId string) error {
 	var req = cancelBetRequest{
 		BetId: betId,
 	}
 
-	var body, error = json.Marshal(req)
-	if error != nil {
-		log.Fatalln(error)
+	var body, err = json.Marshal(req)
+	if err != nil {
+		return err
 	}
 
 	sb := callManifoldApi("POST", fmt.Sprintf("v0/bet/cancel/%s", betId), bytes.NewBuffer(body))
@@ -27,6 +26,8 @@ func CancelBet(betId string) {
 	json.Unmarshal([]byte(sb), &response)
 
 	if response.ID == "" || !response.IsCancelled {
-		log.Fatalf("failed to cancel bet: %+v", response)
+		return fmt.Errorf("failed to cancel bet: %+v", response)
 	}
+
+	return nil
 }

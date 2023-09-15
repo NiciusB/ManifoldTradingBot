@@ -62,3 +62,20 @@ func PlaceBet(bet PlaceBetRequest) (*placeBetResponse, error) {
 
 	return &response, nil
 }
+
+func PlaceInstantlyCancelledLimitOrder(betRequest PlaceBetRequest) (*placeBetResponse, error) {
+	var placedBet, err = PlaceBet(betRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	if !placedBet.IsFilled {
+		// Cancel instantly if it didn't fully fill
+		err := CancelBet(placedBet.BetID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return placedBet, nil
+}
