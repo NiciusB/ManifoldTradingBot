@@ -16,7 +16,7 @@ type seenBetsHistoryType struct {
 
 var seenBetsHistory seenBetsHistoryType
 
-var MIN_PROB_SWING = 0.1
+var MIN_PROB_SWING = 0.07
 
 var bannedUserIDs = []string{
 	"w1knZ6yBvEhRThYPEYTwlmGv7N33",

@@ -78,7 +78,7 @@ func placeBet(groupedBet *groupedMarketBet) {
 	// 10 might not be enough to offset api betting fees, we might need to increase in the future
 	var amount int64 = 10
 
-	var alpha = 0.7
+	var alpha = 0.85
 	var limitProb = math.Round((groupedBet.prevProb*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
