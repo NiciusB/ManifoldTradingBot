@@ -57,7 +57,7 @@ func markNewBetsAllAsSeen() {
 }
 
 func getNewGoodForVelocityBets() []ManifoldApi.Bet {
-	var bets = ManifoldApi.GetBets("", "")
+	var bets = ManifoldApi.GetBetsAfterTimestamp(seenBetsHistory.lastCreatedTime)
 
 	// Filter valid bets for velocity
 	var filteredBets []ManifoldApi.Bet

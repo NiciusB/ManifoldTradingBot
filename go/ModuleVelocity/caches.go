@@ -54,5 +54,5 @@ var usersCache = CreateGenericCache(ManifoldApi.GetUser, time.Minute*30)
 var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*5)
 
 func getBetsForMarket(marketId string) []ManifoldApi.Bet {
-	return ManifoldApi.GetBets(marketId, "")
+	return ManifoldApi.GetAllBetsForMarket(marketId)
 }

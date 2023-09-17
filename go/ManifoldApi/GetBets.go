@@ -42,10 +42,79 @@ type Bet struct {
 	} `json:"fills,omitempty"`
 }
 
-func GetBets(contractId string, before string) []Bet {
-	sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?contractId=%s&before=%s", contractId, before), nil)
+var getBetsAfterTimestampIterations = 0
 
+func GetBetsAfterTimestamp(MinCreatedTime int64) []Bet {
+	var limit = getBetsAfterTimestampIterations%99 + 2
+	getBetsAfterTimestampIterations++
+
+	var lastBetId = ""
 	var response []Bet
-	json.Unmarshal([]byte(sb), &response)
+
+	for {
+		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v&before=%s", limit, lastBetId), nil)
+		var bets []Bet
+		json.Unmarshal([]byte(sb), &bets)
+
+		var filteredBets []Bet
+		for _, bet := range bets {
+			if bet.CreatedTime >= MinCreatedTime {
+				filteredBets = append(filteredBets, bet)
+			}
+		}
+
+		response = append(response, filteredBets...)
+
+		if len(filteredBets) < limit {
+			break
+		}
+
+		lastBetId = bets[len(bets)-1].ID
+
+		if limit < 500 {
+			limit = 500
+		} else {
+			limit = 1000
+		}
+	}
+
+	return response
+}
+
+func GetAllBetsForMarket(marketId string) []Bet {
+	var lastBetId = ""
+	var response []Bet
+	var limit = 1000
+
+	for {
+		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?contractId=%s&before=%s&limit=%v", marketId, lastBetId, limit), nil)
+		var bets []Bet
+		json.Unmarshal([]byte(sb), &bets)
+
+		response = append(response, bets...)
+
+		if len(bets) < limit {
+			break
+		}
+
+		lastBetId = bets[len(bets)-1].ID
+	}
+
+	return response
+}
+
+type getOpenLimitOrdersSummaryResponse = map[float64]float64
+
+func GetOpenLimitOrdersSummary(marketId string) getOpenLimitOrdersSummaryResponse {
+	var allBets = GetAllBetsForMarket(marketId)
+
+	var response = make(getOpenLimitOrdersSummaryResponse)
+
+	for _, bet := range allBets {
+		if !bet.IsCancelled && bet.IsFilled != nil && !*bet.IsFilled {
+			response[bet.LimitProb] += bet.OrderAmount - bet.Amount
+		}
+	}
+
 	return response
 }
