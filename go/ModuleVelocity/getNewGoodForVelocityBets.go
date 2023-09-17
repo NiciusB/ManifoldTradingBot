@@ -59,29 +59,20 @@ func markNewBetsAllAsSeen() {
 func getNewGoodForVelocityBets() []ManifoldApi.Bet {
 	var bets = ManifoldApi.GetBetsAfterTimestamp(seenBetsHistory.lastCreatedTime)
 
-	// Filter valid bets for velocity
-	var filteredBets []ManifoldApi.Bet
-	var wg sync.WaitGroup
-	for _, bet := range bets {
-		wg.Add(1)
-		go func(bet ManifoldApi.Bet) {
-			defer wg.Done()
-			if !isBetGoodForVelocity(bet) {
-				return
-			}
-			filteredBets = append(filteredBets, bet)
-		}(bet)
-	}
-	wg.Wait()
-
-	// Update seenBetsHistory, this needs to go after isBetGoodForVelocity
+	// Update seenBetsHistory, lock to prevent duplicates
 	seenBetsHistory.lock.Lock()
+	var allowedBetIds []string
+	for _, bet := range bets {
+		if bet.CreatedTime > seenBetsHistory.lastCreatedTime || (bet.CreatedTime == seenBetsHistory.lastCreatedTime && !slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID)) {
+			allowedBetIds = append(allowedBetIds, bet.ID)
+		}
+	}
+	seenBetsHistory.seenBetsOnLastCreatedTime = []string{}
 	for _, bet := range bets {
 		if bet.CreatedTime > seenBetsHistory.lastCreatedTime {
 			seenBetsHistory.lastCreatedTime = bet.CreatedTime
 		}
 	}
-	seenBetsHistory.seenBetsOnLastCreatedTime = []string{}
 	for _, bet := range bets {
 		if bet.CreatedTime == seenBetsHistory.lastCreatedTime {
 			seenBetsHistory.seenBetsOnLastCreatedTime = append(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID)
@@ -89,12 +80,27 @@ func getNewGoodForVelocityBets() []ManifoldApi.Bet {
 	}
 	seenBetsHistory.lock.Unlock()
 
+	// Filter valid bets for velocity
+	var filteredBets []ManifoldApi.Bet
+	var wg sync.WaitGroup
+	for _, bet := range bets {
+		wg.Add(1)
+		go func(bet ManifoldApi.Bet) {
+			defer wg.Done()
+			if !isBetGoodForVelocity(bet, allowedBetIds) {
+				return
+			}
+			filteredBets = append(filteredBets, bet)
+		}(bet)
+	}
+	wg.Wait()
+
 	// Return filteredBets
 	return filteredBets
 }
 
-func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
-	if bet.CreatedTime < seenBetsHistory.lastCreatedTime || slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID) {
+func isBetGoodForVelocity(bet ManifoldApi.Bet, allowedBetIds []string) bool {
+	if !slices.Contains(allowedBetIds, bet.ID) {
 		// Ignore already seen bets
 		return false
 	}
@@ -160,7 +166,7 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 
 	var cachedUser = usersCache.Get(bet.UserID)
 	var isNewAccount = cachedUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3
-	if isNewAccount && cachedUser.ProfitCached.AllTime > 1000 {
+	if isNewAccount && cachedUser.ProfitCachedAllTime > 1000 {
 		// Ignore new accounts with large profits
 		return false
 	}
@@ -177,13 +183,7 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		return false
 	}
 
-	// Check market again, but without cache: since we passed all previous checks this is now seriously eligible for betting and requires fresh data
-	marketsCache.DeleteCache(bet.ContractID)
-	cachedMarket = marketsCache.Get(bet.ContractID)
-	probDiff = math.Abs(bet.ProbBefore - cachedMarket.Probability)
-	if probDiff < MIN_PROB_SWING && true {
-		return false
-	}
-
-	return true
+	// Return from variable to prevent Go complaining about previous if being redundant
+	var returnValue = true
+	return returnValue
 }

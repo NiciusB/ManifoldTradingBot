@@ -10,10 +10,15 @@ import (
 	"time"
 )
 
-func callManifoldApi(method string, path string, reqBody io.Reader) string {
-	computeThroughputLimiter(99)
+var maxPerSecond = 99
 
-	// log.Printf("callManifoldApi (%+v %+v), body:\n%+v\n", method, path, reqBody)
+func callManifoldApi(method string, path string, reqBody io.Reader) string {
+	computeThroughputLimiter()
+
+	var debug = os.Getenv("MANIFOLD_API_DEBUG") == "true"
+	if debug {
+		log.Printf("callManifoldApi (%+v %+v), body:\n%+v\n", method, path, reqBody)
+	}
 
 	req, err := http.NewRequest(method, fmt.Sprintf("https://manifold.markets/api/%s", path), reqBody)
 	if err != nil {
@@ -54,7 +59,7 @@ var throughputLimiter throughputLimiterType
 /*
 Sleeps if called more often than maxPerSecond
 */
-func computeThroughputLimiter(maxPerSecond int) {
+func computeThroughputLimiter() {
 	throughputLimiter.lock.Lock()
 
 	var second = time.Now().Unix()
@@ -66,10 +71,26 @@ func computeThroughputLimiter(maxPerSecond int) {
 		if throughputLimiter.calls > maxPerSecond {
 			throughputLimiter.lock.Unlock()
 			time.Sleep(time.Millisecond * 100)
-			computeThroughputLimiter(maxPerSecond)
+			computeThroughputLimiter()
 			return
 		}
 	}
 
 	throughputLimiter.lock.Unlock()
+}
+
+func GetThroughputFillPercentage() float64 {
+	throughputLimiter.lock.Lock()
+	defer throughputLimiter.lock.Unlock()
+
+	var second = time.Now().Unix()
+	if second != throughputLimiter.lastSecond {
+		return 0
+	} else {
+		if throughputLimiter.calls >= maxPerSecond {
+			return 1
+		} else {
+			return float64(throughputLimiter.calls) / float64(maxPerSecond)
+		}
+	}
 }

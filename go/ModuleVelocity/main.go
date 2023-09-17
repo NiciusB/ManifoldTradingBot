@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var roundLock sync.Mutex
-
 var myUserId string
 
 func Run() {
@@ -20,20 +18,20 @@ func Run() {
 	markNewBetsAllAsSeen() // Only process bets created from now on
 
 	for {
-		time.Sleep(time.Millisecond * 50)
-		runVelocityRound()
+		time.Sleep(time.Millisecond * 30)
+		if ManifoldApi.GetThroughputFillPercentage() < 0.5 {
+			go runVelocityRound()
+		}
 	}
 }
 
 type groupedMarketBet struct {
-	marketId string
-	prevProb float64
+	marketId   string
+	probBefore float64
+	probAfter  float64
 }
 
 func runVelocityRound() {
-	roundLock.Lock()
-	defer roundLock.Unlock()
-
 	var allBets = getNewGoodForVelocityBets()
 
 	// Group by market id
@@ -41,15 +39,17 @@ func runVelocityRound() {
 	for _, bet := range allBets {
 		if groupedMarketBets[bet.ContractID] == nil {
 			groupedMarketBets[bet.ContractID] = &groupedMarketBet{
-				marketId: bet.ContractID,
-				prevProb: bet.ProbBefore,
+				marketId:   bet.ContractID,
+				probBefore: bet.ProbBefore,
+				probAfter:  bet.ProbAfter,
 			}
 		} else {
-			var savedPrev = groupedMarketBets[bet.ContractID].prevProb
-			var myPrev = bet.ProbBefore
-			if math.Abs(0.5-savedPrev) < math.Abs(0.5-myPrev) {
-				// Save the most extreme prob
-				groupedMarketBets[bet.ContractID].prevProb = myPrev
+			// Save the most extreme probs
+			if math.Abs(0.5-groupedMarketBets[bet.ContractID].probBefore) < math.Abs(0.5-bet.ProbBefore) {
+				groupedMarketBets[bet.ContractID].probBefore = bet.ProbBefore
+			}
+			if math.Abs(0.5-groupedMarketBets[bet.ContractID].probAfter) < math.Abs(0.5-bet.ProbAfter) {
+				groupedMarketBets[bet.ContractID].probAfter = bet.ProbAfter
 			}
 		}
 	}
@@ -68,8 +68,7 @@ func runVelocityRound() {
 
 func placeBet(groupedBet *groupedMarketBet) {
 	var outcome string
-	var cachedMarket = marketsCache.Get(groupedBet.marketId)
-	if groupedBet.prevProb > cachedMarket.Probability {
+	if groupedBet.probBefore > groupedBet.probAfter {
 		outcome = "YES"
 	} else {
 		outcome = "NO"
@@ -79,7 +78,7 @@ func placeBet(groupedBet *groupedMarketBet) {
 	var amount int64 = 10
 
 	var alpha = 0.85
-	var limitProb = math.Round((groupedBet.prevProb*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
+	var limitProb = math.Round((groupedBet.probBefore*(1-alpha)+groupedBet.probAfter*alpha)*100) / 100
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
 		ContractId: groupedBet.marketId,
@@ -87,10 +86,14 @@ func placeBet(groupedBet *groupedMarketBet) {
 		Amount:     amount,
 		LimitProb:  limitProb,
 	}
+
+	var cachedMarket = marketsCache.Get(groupedBet.marketId)
 	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
 
 	var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 	if err != nil {
 		log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
 	}
+
+	marketPositionsCache.DeleteCache(groupedBet.marketId)
 }

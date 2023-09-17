@@ -45,14 +45,14 @@ type Bet struct {
 var getBetsAfterTimestampIterations = 0
 
 func GetBetsAfterTimestamp(MinCreatedTime int64) []Bet {
-	var limit = getBetsAfterTimestampIterations%99 + 2
+	var limit = 3
 	getBetsAfterTimestampIterations++
 
 	var lastBetId = ""
 	var response []Bet
 
 	for {
-		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v&before=%s", limit, lastBetId), nil)
+		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v&before=%s&cacheBust=%v", limit, lastBetId, getBetsAfterTimestampIterations%999999999999999), nil)
 		var bets []Bet
 		json.Unmarshal([]byte(sb), &bets)
 
@@ -71,7 +71,9 @@ func GetBetsAfterTimestamp(MinCreatedTime int64) []Bet {
 
 		lastBetId = bets[len(bets)-1].ID
 
-		if limit < 500 {
+		if limit < 50 {
+			limit = 50
+		} else if limit < 500 {
 			limit = 500
 		} else {
 			limit = 1000
