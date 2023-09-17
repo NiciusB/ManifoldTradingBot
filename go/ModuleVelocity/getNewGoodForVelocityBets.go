@@ -9,12 +9,14 @@ import (
 	"time"
 )
 
-type seenBetsHistory struct {
+type seenBetsHistoryType struct {
 	lastCreatedTime           int64
 	seenBetsOnLastCreatedTime []string
+	lock                      sync.Mutex
 }
 
-var SEEN_BETS_HISTORY seenBetsHistory
+var seenBetsHistory seenBetsHistoryType
+
 var bannedUserIDs = []string{
 	"w1knZ6yBvEhRThYPEYTwlmGv7N33",
 	"BhNkw088bMNwIFF2Aq5Gg9NTPzz1",
@@ -52,7 +54,7 @@ var bannedUserIDs = []string{
 var MIN_PROB_SWING = 0.1
 
 func markNewBetsAllAsSeen() {
-	SEEN_BETS_HISTORY.lastCreatedTime = time.Now().UnixMilli()
+	seenBetsHistory.lastCreatedTime = time.Now().UnixMilli()
 }
 
 func getNewGoodForVelocityBets() []ManifoldApi.Bet {
@@ -85,18 +87,20 @@ func getNewGoodForVelocityBets() []ManifoldApi.Bet {
 	}
 	wg.Wait()
 
-	// Update SEEN_BETS_HISTORY
+	// Update seenBetsHistory
+	seenBetsHistory.lock.Lock()
 	for _, bet := range bets {
-		if bet.CreatedTime > SEEN_BETS_HISTORY.lastCreatedTime {
-			SEEN_BETS_HISTORY.lastCreatedTime = bet.CreatedTime
+		if bet.CreatedTime > seenBetsHistory.lastCreatedTime {
+			seenBetsHistory.lastCreatedTime = bet.CreatedTime
 		}
 	}
+	seenBetsHistory.seenBetsOnLastCreatedTime = []string{}
 	for _, bet := range bets {
-		SEEN_BETS_HISTORY.seenBetsOnLastCreatedTime = []string{}
-		if bet.CreatedTime == SEEN_BETS_HISTORY.lastCreatedTime {
-			SEEN_BETS_HISTORY.seenBetsOnLastCreatedTime = append(SEEN_BETS_HISTORY.seenBetsOnLastCreatedTime, bet.ID)
+		if bet.CreatedTime == seenBetsHistory.lastCreatedTime {
+			seenBetsHistory.seenBetsOnLastCreatedTime = append(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID)
 		}
 	}
+	seenBetsHistory.lock.Unlock()
 
 	sort.SliceStable(scoredBets, func(i, j int) bool {
 		return scoredBets[i].score > scoredBets[j].score
@@ -125,7 +129,7 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		return false
 	}
 
-	if bet.CreatedTime < SEEN_BETS_HISTORY.lastCreatedTime || slices.Contains(SEEN_BETS_HISTORY.seenBetsOnLastCreatedTime, bet.ID) {
+	if bet.CreatedTime < seenBetsHistory.lastCreatedTime || slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID) {
 		// Ignore already seen bets
 		return false
 	}
@@ -157,6 +161,19 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		// Ignore markets with less than 4 market positions
 		return false
 	}
+
+	var myPosition *ManifoldApi.MarketPosition
+	for _, pos := range cachedMarketPositions {
+		if pos.UserID == myUserId {
+			myPosition = &pos
+		}
+	}
+	if myPosition != nil && myPosition.Invested > 200 {
+		// Ignore markets where I am too invested. This could be increased in the future to allow larger positions
+		return false
+	}
+
+	// TODO: Ignore markets with low volatility
 
 	var cachedUser = usersCache.Get(bet.UserID)
 	var isNewAccount = cachedUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3

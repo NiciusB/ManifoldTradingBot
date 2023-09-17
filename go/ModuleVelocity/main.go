@@ -10,11 +10,11 @@ import (
 
 var roundLock sync.Mutex
 
-var marketsCache = CreateGenericCache(ManifoldApi.GetMarket, time.Minute*30)
-var usersCache = CreateGenericCache(ManifoldApi.GetUser, time.Hour)
-var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*15)
+var myUserId string
 
 func Run() {
+	myUserId = ManifoldApi.GetMe().ID
+
 	log.Println("Velocity module enabled!")
 
 	markNewBetsAllAsSeen() // Only process bets created from now on
@@ -31,27 +31,47 @@ func runVelocityRound() {
 
 	var allBets = getNewGoodForVelocityBets()
 
+	type groupedMarketBet struct {
+		prevProb float64
+	}
+	var groupedMarketBets = make(map[string]*groupedMarketBet)
 	for _, bet := range allBets {
+		if groupedMarketBets[bet.ContractID] == nil {
+			groupedMarketBets[bet.ContractID] = &groupedMarketBet{
+				prevProb: bet.ProbBefore,
+			}
+		} else {
+			var savedPrev = groupedMarketBets[bet.ContractID].prevProb
+			var myPrev = bet.ProbBefore
+			if math.Abs(0.5-savedPrev) < math.Abs(0.5-myPrev) {
+				// Save the most extreme prob
+				groupedMarketBets[bet.ContractID].prevProb = myPrev
+			}
+		}
+	}
+
+	for marketId, groupedBet := range groupedMarketBets {
 		var outcome string
-		var cachedMarket = marketsCache.Get(bet.ContractID)
-		if bet.ProbBefore > cachedMarket.Probability {
+		var cachedMarket = marketsCache.Get(marketId)
+		if groupedBet.prevProb > cachedMarket.Probability {
 			outcome = "YES"
 		} else {
 			outcome = "NO"
 		}
 
+		// 10 might not be enough to offset api betting fees, we might need to increase in the future
 		var amount int64 = 10
 
 		var alpha = 0.7
-		var limitProb = math.Round((bet.ProbBefore*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
+		var limitProb = math.Round((groupedBet.prevProb*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
 
 		var betRequest = ManifoldApi.PlaceBetRequest{
-			ContractId: bet.ContractID,
+			ContractId: marketId,
 			Outcome:    outcome,
 			Amount:     amount,
 			LimitProb:  limitProb,
 		}
-		log.Printf("Placing velocity bet. Bet: %+v\n Request: %+v.\n", bet, betRequest)
+		log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
 
 		/*
 			var placedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)

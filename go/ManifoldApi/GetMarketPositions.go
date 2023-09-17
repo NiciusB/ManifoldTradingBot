@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type MarketPosition []struct {
+type MarketPosition struct {
 	From struct {
 		Day struct {
 			Value         float64 `json:"value"`

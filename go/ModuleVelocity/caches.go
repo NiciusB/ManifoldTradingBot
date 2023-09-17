@@ -1,6 +1,7 @@
 package modulevelocity
 
 import (
+	"ManifoldTradingBot/ManifoldApi"
 	"ManifoldTradingBot/utils"
 	"time"
 
@@ -45,3 +46,8 @@ func (c *GenericCache[T]) Get(id string) T {
 
 	return freshItem
 }
+
+// Create caches to us eone on other files
+var marketsCache = CreateGenericCache(ManifoldApi.GetMarket, time.Minute*30)
+var usersCache = CreateGenericCache(ManifoldApi.GetUser, time.Hour)
+var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*15)
