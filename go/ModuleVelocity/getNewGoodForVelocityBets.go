@@ -114,9 +114,8 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		return false
 	}
 
-	if bet.AnswerId != "undefined" {
+	if bet.AnswerId != "undefined" && bet.AnswerId != "" {
 		// Ignore non-binary markets, until the API supports betting yes/no on those
-		// The value "undefined" might change in the future since it seems weird, so this is check at risk of breaking the bot
 		return false
 	}
 
