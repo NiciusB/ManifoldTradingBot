@@ -20,9 +20,14 @@ func Run() {
 	markNewBetsAllAsSeen() // Only process bets created from now on
 
 	for {
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 50)
 		runVelocityRound()
 	}
+}
+
+type groupedMarketBet struct {
+	marketId string
+	prevProb float64
 }
 
 func runVelocityRound() {
@@ -31,13 +36,12 @@ func runVelocityRound() {
 
 	var allBets = getNewGoodForVelocityBets()
 
-	type groupedMarketBet struct {
-		prevProb float64
-	}
+	// Group by market id
 	var groupedMarketBets = make(map[string]*groupedMarketBet)
 	for _, bet := range allBets {
 		if groupedMarketBets[bet.ContractID] == nil {
 			groupedMarketBets[bet.ContractID] = &groupedMarketBet{
+				marketId: bet.ContractID,
 				prevProb: bet.ProbBefore,
 			}
 		} else {
@@ -50,36 +54,43 @@ func runVelocityRound() {
 		}
 	}
 
-	for marketId, groupedBet := range groupedMarketBets {
-		var outcome string
-		var cachedMarket = marketsCache.Get(marketId)
-		if groupedBet.prevProb > cachedMarket.Probability {
-			outcome = "YES"
-		} else {
-			outcome = "NO"
-		}
+	// Place bets in parallel
+	var wg sync.WaitGroup
+	for _, groupedBet := range groupedMarketBets {
+		wg.Add(1)
+		go func(groupedBet *groupedMarketBet) {
+			defer wg.Done()
+			placeBet(groupedBet)
+		}(groupedBet)
+	}
+	wg.Wait()
+}
 
-		// 10 might not be enough to offset api betting fees, we might need to increase in the future
-		var amount int64 = 10
+func placeBet(groupedBet *groupedMarketBet) {
+	var outcome string
+	var cachedMarket = marketsCache.Get(groupedBet.marketId)
+	if groupedBet.prevProb > cachedMarket.Probability {
+		outcome = "YES"
+	} else {
+		outcome = "NO"
+	}
 
-		var alpha = 0.7
-		var limitProb = math.Round((groupedBet.prevProb*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
+	// 10 might not be enough to offset api betting fees, we might need to increase in the future
+	var amount int64 = 10
 
-		var betRequest = ManifoldApi.PlaceBetRequest{
-			ContractId: marketId,
-			Outcome:    outcome,
-			Amount:     amount,
-			LimitProb:  limitProb,
-		}
-		log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
+	var alpha = 0.7
+	var limitProb = math.Round((groupedBet.prevProb*(1-alpha)+cachedMarket.Probability*alpha)*100) / 100
 
-		/*
-			var placedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
-			if err != nil {
-				log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
-			} else {
-				log.Printf("Placed bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
-			}
-		*/
+	var betRequest = ManifoldApi.PlaceBetRequest{
+		ContractId: groupedBet.marketId,
+		Outcome:    outcome,
+		Amount:     amount,
+		LimitProb:  limitProb,
+	}
+	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
+
+	var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+	if err != nil {
+		log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
 	}
 }

@@ -17,6 +17,7 @@ type Bet struct {
 	Shares        float64 `json:"shares"`
 	UserID        string  `json:"userId"`
 	Outcome       string  `json:"outcome"`
+	AnswerId      string  `json:"answerId"`
 	ProbAfter     float64 `json:"probAfter"`
 	ContractID    string  `json:"contractId"`
 	LoanAmount    float64 `json:"loanAmount"`

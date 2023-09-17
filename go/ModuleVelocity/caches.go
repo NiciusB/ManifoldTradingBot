@@ -49,5 +49,10 @@ func (c *GenericCache[T]) Get(id string) T {
 
 // Create caches to us eone on other files
 var marketsCache = CreateGenericCache(ManifoldApi.GetMarket, time.Minute*30)
-var usersCache = CreateGenericCache(ManifoldApi.GetUser, time.Hour)
-var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*15)
+var betsForMarketCache = CreateGenericCache(getBetsForMarket, time.Minute*5)
+var usersCache = CreateGenericCache(ManifoldApi.GetUser, time.Minute*30)
+var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*5)
+
+func getBetsForMarket(marketId string) []ManifoldApi.Bet {
+	return ManifoldApi.GetBets(marketId, "")
+}

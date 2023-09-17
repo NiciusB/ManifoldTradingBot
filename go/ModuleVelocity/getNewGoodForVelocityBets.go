@@ -4,7 +4,6 @@ import (
 	"ManifoldTradingBot/ManifoldApi"
 	"math"
 	"slices"
-	"sort"
 	"sync"
 	"time"
 )
@@ -16,6 +15,8 @@ type seenBetsHistoryType struct {
 }
 
 var seenBetsHistory seenBetsHistoryType
+
+var MIN_PROB_SWING = 0.01
 
 var bannedUserIDs = []string{
 	"w1knZ6yBvEhRThYPEYTwlmGv7N33",
@@ -51,21 +52,15 @@ var bannedUserIDs = []string{
 	"BB5ZIBNqNKddjaZQUnqkFCiDyTs2",
 }
 
-var MIN_PROB_SWING = 0.1
-
 func markNewBetsAllAsSeen() {
 	seenBetsHistory.lastCreatedTime = time.Now().UnixMilli()
 }
 
 func getNewGoodForVelocityBets() []ManifoldApi.Bet {
-	type scoredBet struct {
-		bet   ManifoldApi.Bet
-		score float64
-	}
-
 	var bets = ManifoldApi.GetBets("", "")
 
-	var scoredBets []scoredBet
+	// Filter valid bets for velocity
+	var filteredBets []ManifoldApi.Bet
 	var wg sync.WaitGroup
 	for _, bet := range bets {
 		wg.Add(1)
@@ -74,20 +69,12 @@ func getNewGoodForVelocityBets() []ManifoldApi.Bet {
 			if !isBetGoodForVelocity(bet) {
 				return
 			}
-
-			var probDiff = math.Abs(bet.ProbBefore - bet.ProbAfter)
-			var score = probDiff
-			var scoredBet = scoredBet{
-				bet:   bet,
-				score: score,
-			}
-			scoredBets = append(scoredBets, scoredBet)
-
+			filteredBets = append(filteredBets, bet)
 		}(bet)
 	}
 	wg.Wait()
 
-	// Update seenBetsHistory
+	// Update seenBetsHistory, this needs to go after isBetGoodForVelocity
 	seenBetsHistory.lock.Lock()
 	for _, bet := range bets {
 		if bet.CreatedTime > seenBetsHistory.lastCreatedTime {
@@ -102,20 +89,18 @@ func getNewGoodForVelocityBets() []ManifoldApi.Bet {
 	}
 	seenBetsHistory.lock.Unlock()
 
-	sort.SliceStable(scoredBets, func(i, j int) bool {
-		return scoredBets[i].score > scoredBets[j].score
-	})
-
-	var result []ManifoldApi.Bet
-	for _, bet := range scoredBets {
-		result = append(result, bet.bet)
-	}
-	return result
+	// Return filteredBets
+	return filteredBets
 }
 
 func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
+	if bet.CreatedTime < seenBetsHistory.lastCreatedTime || slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID) {
+		// Ignore already seen bets
+		return false
+	}
+
 	if bet.IsAPI {
-		// Ignore bots
+		// Ignore bots, mainly to prevent infinite loops of one reacting to another
 		return false
 	}
 
@@ -129,8 +114,9 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		return false
 	}
 
-	if bet.CreatedTime < seenBetsHistory.lastCreatedTime || slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID) {
-		// Ignore already seen bets
+	if bet.AnswerId != "undefined" {
+		// Ignore non-binary markets, until the API supports betting yes/no on those
+		// The value "undefined" might change in the future since it seems weird, so this is check at risk of breaking the bot
 		return false
 	}
 
@@ -173,12 +159,22 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet) bool {
 		return false
 	}
 
-	// TODO: Ignore markets with low volatility
-
 	var cachedUser = usersCache.Get(bet.UserID)
 	var isNewAccount = cachedUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3
 	if isNewAccount && cachedUser.ProfitCached.AllTime > 1000 {
 		// Ignore new accounts with large profits
+		return false
+	}
+
+	var betsForMarket = betsForMarketCache.Get(bet.ContractID)
+	var betsInLast24Hours = 0
+	for _, marketBet := range betsForMarket {
+		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
+			betsInLast24Hours++
+		}
+	}
+	if betsInLast24Hours < 3 {
+		// Ignore markets with low volatility. This check could be improved in the future
 		return false
 	}
 
