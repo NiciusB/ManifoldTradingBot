@@ -3,6 +3,7 @@ package ManifoldApi
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type Bet struct {
@@ -52,7 +53,12 @@ func GetBetsAfterTimestamp(MinCreatedTime int64) []Bet {
 	var response []Bet
 
 	for {
-		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v&before=%s&cacheBust=%v", limit, lastBetId, getBetsAfterTimestampIterations%999999999999999), nil)
+		var beforeParam = ""
+		if lastBetId != "" {
+			beforeParam = "&before=" + lastBetId
+		}
+
+		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v%v", strings.Repeat("0", getBetsAfterTimestampIterations%500)+fmt.Sprint(limit), beforeParam), nil)
 		var bets []Bet
 		json.Unmarshal([]byte(sb), &bets)
 

@@ -18,7 +18,7 @@ func Run() {
 	markNewBetsAllAsSeen() // Only process bets created from now on
 
 	for {
-		time.Sleep(time.Millisecond * 30)
+		time.Sleep(time.Millisecond * 99)
 		if ManifoldApi.GetThroughputFillPercentage() < 0.5 {
 			go runVelocityRound()
 		}
