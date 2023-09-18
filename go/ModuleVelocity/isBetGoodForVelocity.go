@@ -4,17 +4,8 @@ import (
 	"ManifoldTradingBot/ManifoldApi"
 	"math"
 	"slices"
-	"sync"
 	"time"
 )
-
-type seenBetsHistoryType struct {
-	lastCreatedTime           int64
-	seenBetsOnLastCreatedTime []string
-	lock                      sync.Mutex
-}
-
-var seenBetsHistory seenBetsHistoryType
 
 var MIN_PROB_SWING = 0.13
 
@@ -52,58 +43,8 @@ var bannedUserIDs = []string{
 	"BB5ZIBNqNKddjaZQUnqkFCiDyTs2",
 }
 
-func markNewBetsAllAsSeen() {
-	seenBetsHistory.lastCreatedTime = time.Now().UnixMilli()
-}
-
-func getNewGoodForVelocityBets() []ManifoldApi.Bet {
-	var bets = ManifoldApi.GetBetsAfterTimestamp(seenBetsHistory.lastCreatedTime)
-
-	// Update seenBetsHistory, lock to prevent duplicates
-	seenBetsHistory.lock.Lock()
-	var allowedBetIds []string
-	for _, bet := range bets {
-		if bet.CreatedTime > seenBetsHistory.lastCreatedTime || (bet.CreatedTime == seenBetsHistory.lastCreatedTime && !slices.Contains(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID)) {
-			allowedBetIds = append(allowedBetIds, bet.ID)
-		}
-	}
-	seenBetsHistory.seenBetsOnLastCreatedTime = []string{}
-	for _, bet := range bets {
-		if bet.CreatedTime > seenBetsHistory.lastCreatedTime {
-			seenBetsHistory.lastCreatedTime = bet.CreatedTime
-		}
-	}
-	for _, bet := range bets {
-		if bet.CreatedTime == seenBetsHistory.lastCreatedTime {
-			seenBetsHistory.seenBetsOnLastCreatedTime = append(seenBetsHistory.seenBetsOnLastCreatedTime, bet.ID)
-		}
-	}
-	seenBetsHistory.lock.Unlock()
-
-	// Filter valid bets for velocity
-	var filteredBets []ManifoldApi.Bet
-	var wg sync.WaitGroup
-	for _, bet := range bets {
-		wg.Add(1)
-		go func(bet ManifoldApi.Bet) {
-			defer wg.Done()
-			if !isBetGoodForVelocity(bet, allowedBetIds) {
-				return
-			}
-			filteredBets = append(filteredBets, bet)
-		}(bet)
-	}
-	wg.Wait()
-
-	// Return filteredBets
-	return filteredBets
-}
-
-func isBetGoodForVelocity(bet ManifoldApi.Bet, allowedBetIds []string) bool {
-	if !slices.Contains(allowedBetIds, bet.ID) {
-		// Ignore already seen bets
-		return false
-	}
+func isBetGoodForVelocity(payload postgresChangesPayload) bool {
+	var bet = payload.Data.Record.Data
 
 	if bet.IsAPI {
 		// Ignore bots, mainly to prevent infinite loops of one reacting to another
@@ -120,7 +61,7 @@ func isBetGoodForVelocity(bet ManifoldApi.Bet, allowedBetIds []string) bool {
 		return false
 	}
 
-	if bet.AnswerId != "undefined" && bet.AnswerId != "" {
+	if bet.AnswerID != "undefined" && bet.AnswerID != "" {
 		// Ignore non-binary markets, until the API supports betting yes/no on those
 		return false
 	}

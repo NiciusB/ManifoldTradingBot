@@ -3,6 +3,7 @@ package main
 import (
 	modulestock "ManifoldTradingBot/ModuleStock"
 	modulevelocity "ManifoldTradingBot/ModuleVelocity"
+	"ManifoldTradingBot/utils"
 	"log"
 	"os"
 	"time"
@@ -15,6 +16,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	utils.ConnectSupabaseWebsocket()
 
 	log.Println("Bot started up correctly!")
 

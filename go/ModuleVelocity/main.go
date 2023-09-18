@@ -2,10 +2,9 @@ package modulevelocity
 
 import (
 	"ManifoldTradingBot/ManifoldApi"
+	"ManifoldTradingBot/utils"
 	"log"
 	"math"
-	"sync"
-	"time"
 )
 
 var myUserId string
@@ -15,13 +14,27 @@ func Run() {
 
 	log.Println("Velocity module enabled!")
 
-	markNewBetsAllAsSeen() // Only process bets created from now on
-
-	for {
-		time.Sleep(time.Millisecond * 99)
-		if ManifoldApi.GetThroughputFillPercentage() < 0.5 {
-			go runVelocityRound()
+	utils.AddSupabaseWebsocketEventListener(func(event utils.SupabaseEvent) {
+		if event.Event == "postgres_changes" {
+			var payload, err = parseSupabasePostgresChangePayload(event.Payload)
+			if err != nil {
+				log.Printf("Error while decoding postgres_changes: %+\n", err)
+			} else {
+				processBet(*payload)
+			}
 		}
+	})
+}
+
+func processBet(payload postgresChangesPayload) {
+	var bet = payload.Data.Record.Data
+
+	if isBetGoodForVelocity(payload) {
+		placeBet(&groupedMarketBet{
+			marketId:   bet.ContractID,
+			probBefore: bet.ProbBefore,
+			probAfter:  bet.ProbAfter,
+		})
 	}
 }
 
@@ -29,41 +42,6 @@ type groupedMarketBet struct {
 	marketId   string
 	probBefore float64
 	probAfter  float64
-}
-
-func runVelocityRound() {
-	var allBets = getNewGoodForVelocityBets()
-
-	// Group by market id
-	var groupedMarketBets = make(map[string]*groupedMarketBet)
-	for _, bet := range allBets {
-		if groupedMarketBets[bet.ContractID] == nil {
-			groupedMarketBets[bet.ContractID] = &groupedMarketBet{
-				marketId:   bet.ContractID,
-				probBefore: bet.ProbBefore,
-				probAfter:  bet.ProbAfter,
-			}
-		} else {
-			// Save the most extreme probs
-			if math.Abs(0.5-groupedMarketBets[bet.ContractID].probBefore) < math.Abs(0.5-bet.ProbBefore) {
-				groupedMarketBets[bet.ContractID].probBefore = bet.ProbBefore
-			}
-			if math.Abs(0.5-groupedMarketBets[bet.ContractID].probAfter) < math.Abs(0.5-bet.ProbAfter) {
-				groupedMarketBets[bet.ContractID].probAfter = bet.ProbAfter
-			}
-		}
-	}
-
-	// Place bets in parallel
-	var wg sync.WaitGroup
-	for _, groupedBet := range groupedMarketBets {
-		wg.Add(1)
-		go func(groupedBet *groupedMarketBet) {
-			defer wg.Done()
-			placeBet(groupedBet)
-		}(groupedBet)
-	}
-	wg.Wait()
 }
 
 func placeBet(groupedBet *groupedMarketBet) {
@@ -90,10 +68,10 @@ func placeBet(groupedBet *groupedMarketBet) {
 	var cachedMarket = marketsCache.Get(groupedBet.marketId)
 	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
 
-	var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+	/*var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 	if err != nil {
 		log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
-	}
+	}*/
 
 	marketPositionsCache.DeleteCache(groupedBet.marketId)
 }
