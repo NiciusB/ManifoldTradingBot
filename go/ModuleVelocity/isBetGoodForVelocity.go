@@ -1,14 +1,14 @@
 package modulevelocity
 
 import (
+	"log"
 	"math"
 	"slices"
+	"sync"
 	"time"
 )
 
-var MIN_PROB_SWING = 0.13
-
-var bannedUserIDs = []string{
+var BANNED_USER_IDS = []string{
 	"w1knZ6yBvEhRThYPEYTwlmGv7N33",
 	"BhNkw088bMNwIFF2Aq5Gg9NTPzz1",
 	"dNgcgrHGn8ZB30hyDARNtbjvGPm1",
@@ -43,6 +43,48 @@ var bannedUserIDs = []string{
 }
 
 func isBetGoodForVelocity(bet SupabaseBet) bool {
+	var cachedMarket *cachedMarket
+	var myPosition *cachedMarketPosition
+	var cachedUser *cachedUser
+	var marketVelocity *bool
+	var wg sync.WaitGroup
+
+	// Load in advance all needed data, even for obviously not needed markets, since it warms up the cache
+	wg.Add(4)
+	go func() {
+		var err error
+		cachedMarket, err = marketsCache.Get(bet.ContractID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		wg.Done()
+	}()
+	go func() {
+		var err error
+		myPosition, err = myMarketPositionCache.Get(bet.ContractID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		wg.Done()
+	}()
+	go func() {
+		var err error
+		cachedUser, err = usersCache.Get(bet.UserID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		wg.Done()
+	}()
+	go func() {
+		var err error
+		marketVelocity, err = marketVelocityCache.Get(bet.ContractID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+
 	if bet.IsAPI {
 		// Ignore bots, mainly to prevent infinite loops of one reacting to another
 		return false
@@ -63,54 +105,43 @@ func isBetGoodForVelocity(bet SupabaseBet) bool {
 		return false
 	}
 
-	if bet.ProbAfter > 0.9 || bet.ProbAfter < 0.1 {
-		// Ignore extreme probabilities since limit orders do not have enough granularity
-		return false
-	}
-
 	var probDiff = math.Abs(bet.ProbBefore - bet.ProbAfter)
-	if probDiff < MIN_PROB_SWING {
+	var poolSize = cachedMarket.Pool.NO + cachedMarket.Pool.YES // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
+	var poolSizeFactor = math.Min(poolSize, 30_000) / 30_000    // From 0 to 1, 0 being pool is small, 1 being pool is huge
+	var minProbSwing = 0.15 - poolSizeFactor*0.14               // 0.15 base, down to 0.01 depending on poolSize
+	if probDiff < minProbSwing {
 		// Ignore small prob changes
 		return false
 	}
 
-	if slices.Contains(bannedUserIDs, bet.UserID) {
+	if slices.Contains(BANNED_USER_IDS, bet.UserID) {
 		// Ignore banned user ids
 		return false
 	}
 
-	cachedMarket, err := marketsCache.Get(bet.ContractID)
-	if err != nil {
-		return false
-	}
 	if cachedMarket.CreatorID == bet.UserID {
 		// Ignore bets by market creator
 		return false
 	}
 
-	myPosition, err := myMarketPositionCache.Get(bet.ContractID)
-	if err != nil {
-		return false
+	var outcomeWeWillWantToBuy string
+	if bet.ProbBefore > bet.ProbAfter {
+		outcomeWeWillWantToBuy = "YES"
+	} else {
+		outcomeWeWillWantToBuy = "NO"
 	}
-	if myPosition != nil && myPosition.Invested > 200 {
-		// Ignore markets where I am too invested. This could be increased in the future to allow larger positions
+
+	if myPosition != nil && myPosition.Invested > 200 && ((outcomeWeWillWantToBuy == "YES" && myPosition.HasYesShares) || (outcomeWeWillWantToBuy == "NO" && !myPosition.HasYesShares)) {
+		// Ignore markets where I am too invested on one side. This could be increased in the future to allow larger positions
 		return false
 	}
 
-	cachedUser, err := usersCache.Get(bet.UserID)
-	if err != nil {
-		return false
-	}
 	var isNewAccount = cachedUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3
-	if isNewAccount && cachedUser.ProfitCachedAllTime > 1000 {
+	if isNewAccount && cachedUser.ProfitCachedAllTime > 1300 {
 		// Ignore new accounts with large profits
 		return false
 	}
 
-	marketVelocity, err := marketVelocityCache.Get(bet.ContractID)
-	if err != nil {
-		return false
-	}
 	if !*marketVelocity {
 		// Ignore markets with low volatility. This check could be improved in the future
 		return false

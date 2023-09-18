@@ -10,15 +10,17 @@ import (
 type cachedMarket struct {
 	CreatorID string
 	URL       string
+	Pool      ManifoldApi.MarketPool
 }
 
-var marketsCache = CreateGenericCache("markets-v1", func(marketId string) cachedMarket {
+var marketsCache = CreateGenericCache("markets-v2", func(marketId string) cachedMarket {
 	var apiMarket = ManifoldApi.GetMarket(marketId)
 	return cachedMarket{
 		CreatorID: apiMarket.CreatorID,
 		URL:       apiMarket.URL,
+		Pool:      apiMarket.Pool,
 	}
-}, time.Hour*98)
+}, time.Hour*24*14, time.Hour*24*14)
 
 // Users cache
 type cachedUser struct {
@@ -32,25 +34,28 @@ var usersCache = CreateGenericCache("users-v1", func(userId string) cachedUser {
 		CreatedTime:         apiUser.CreatedTime,
 		ProfitCachedAllTime: apiUser.ProfitCached.AllTime,
 	}
-}, time.Hour*48)
+}, time.Hour*24*5, time.Minute*15)
 
 // My market position cache
 type cachedMarketPosition struct {
-	Invested float64
+	Invested     float64
+	HasYesShares bool
 }
 
-var myMarketPositionCache = CreateGenericCache("myMarketPosition-v1", func(marketId string) cachedMarketPosition {
+var myMarketPositionCache = CreateGenericCache("myMarketPosition-v2", func(marketId string) cachedMarketPosition {
 	var apiMarketPosition = ManifoldApi.GetMarketPositionForUser(marketId, myUserId)
 	if apiMarketPosition == nil {
 		return cachedMarketPosition{
-			Invested: 0,
+			Invested:     0,
+			HasYesShares: true,
 		}
 	}
 
 	return cachedMarketPosition{
-		Invested: apiMarketPosition.Invested,
+		Invested:     apiMarketPosition.Invested,
+		HasYesShares: apiMarketPosition.HasYesShares,
 	}
-}, time.Hour*92)
+}, time.Hour*24*5, time.Hour)
 
 // Market velocity cache
 var marketVelocityCache = CreateGenericCache("marketVelocity-v1", func(marketId string) bool {
@@ -77,5 +82,5 @@ var marketVelocityCache = CreateGenericCache("marketVelocity-v1", func(marketId 
 	}
 
 	// Returns true if the market has enough velocity for betting
-	return betsInLast24Hours >= 3 && len(marketPositions) >= 4
-}, time.Minute*15)
+	return betsInLast24Hours >= 6 && len(marketPositions) >= 4
+}, time.Hour*2, time.Minute)

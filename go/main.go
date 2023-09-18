@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ManifoldTradingBot/ManifoldApi"
 	modulestock "ManifoldTradingBot/ModuleStock"
 	modulevelocity "ManifoldTradingBot/ModuleVelocity"
 	"ManifoldTradingBot/utils"
@@ -34,6 +35,11 @@ func main() {
 
 	// Infinite loop for keeping module goroutines alive, since they never end anyway
 	for {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
+
+		var apiThroughputFillPercentage = ManifoldApi.GetThroughputFillPercentage()
+		if apiThroughputFillPercentage > 0.3 {
+			log.Printf("API throughput fill percentage is high: %v%%\n", apiThroughputFillPercentage*100)
+		}
 	}
 }

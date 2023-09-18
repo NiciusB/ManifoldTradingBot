@@ -5,6 +5,7 @@ import (
 	"ManifoldTradingBot/utils"
 	"log"
 	"math"
+	"math/rand"
 	"os"
 )
 
@@ -22,66 +23,54 @@ func Run() {
 				log.Printf("Error while decoding postgres_changes: %+\n", err)
 			} else {
 				var bet = payload.Data.Record.Data
-				go warmupCachesForBet(bet)
 				processBet(bet)
 			}
 		}
 	})
 }
 
-func warmupCachesForBet(bet SupabaseBet) {
-	go marketsCache.Get(bet.ContractID)
-	go myMarketPositionCache.Get(bet.ContractID)
-	go usersCache.Get(bet.UserID)
-	go marketVelocityCache.Get(bet.ContractID)
-}
-
 func processBet(bet SupabaseBet) {
-	if isBetGoodForVelocity(bet) {
-		placeBet(&groupedMarketBet{
-			marketId:   bet.ContractID,
-			probBefore: bet.ProbBefore,
-			probAfter:  bet.ProbAfter,
-		})
+	if !isBetGoodForVelocity(bet) {
+		return
 	}
-}
 
-type groupedMarketBet struct {
-	marketId   string
-	probBefore float64
-	probAfter  float64
-}
+	// [0.7, 0.8)
+	var alpha = rand.Float64()*0.1 + 0.7
+	var limitProb = math.Round((bet.ProbBefore*(1-alpha)+bet.ProbAfter*alpha)*100) / 100
 
-func placeBet(groupedBet *groupedMarketBet) {
+	if limitProb < math.Min(bet.ProbAfter, bet.ProbBefore) && limitProb > math.Max(bet.ProbAfter, bet.ProbBefore) {
+		// We do not have enough granularity on the limit, ignore
+		return
+	}
+
 	var outcome string
-	if groupedBet.probBefore > groupedBet.probAfter {
+	if bet.ProbBefore > bet.ProbAfter {
 		outcome = "YES"
 	} else {
 		outcome = "NO"
 	}
 
-	// 10 might not be enough to offset api betting fees, we might need to increase in the future
-	var amount int64 = 10
-
-	var alpha = 0.75
-	var limitProb = math.Round((groupedBet.probBefore*(1-alpha)+groupedBet.probAfter*alpha)*100) / 100
+	// [10, 30]. Might not be enough to offset api betting fees, we might need to increase in the future
+	var amount int64 = rand.Int63n(20+1) + 10
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
-		ContractId: groupedBet.marketId,
+		ContractId: bet.ContractID,
 		Outcome:    outcome,
 		Amount:     amount,
 		LimitProb:  limitProb,
 	}
 
-	var cachedMarket, err = marketsCache.Get(groupedBet.marketId)
-	if err != nil {
-		log.Printf("Error getting market from cache. Error message: %v\n", err)
-		return
-	}
-
-	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
-
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"
+
+	go func() {
+		var cachedMarket, _ = marketsCache.Get(bet.ContractID)
+		if doNotActuallyPlaceBets {
+			log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, bet, betRequest)
+		} else {
+			log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, bet, betRequest)
+		}
+	}()
+
 	if !doNotActuallyPlaceBets {
 		var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 		if err != nil {
@@ -90,6 +79,5 @@ func placeBet(groupedBet *groupedMarketBet) {
 	}
 
 	// Refresh cache for my market position on this market
-	myMarketPositionCache.Delete(groupedBet.marketId)
-	myMarketPositionCache.Get(groupedBet.marketId)
+	myMarketPositionCache.Renew(bet.ContractID)
 }

@@ -14,14 +14,16 @@ type GenericCache[T interface{}] struct {
 	cacheId    string
 	fetchItem  func(id string) T
 	expiration time.Duration
+	renewAfter time.Duration
 	lock       *utils.StringKeyLock
 }
 
-func CreateGenericCache[T interface{}](cacheId string, fetchItem func(id string) T, expiration time.Duration) GenericCache[T] {
+func CreateGenericCache[T interface{}](cacheId string, fetchItem func(id string) T, expiration time.Duration, renewAfter time.Duration) GenericCache[T] {
 	return GenericCache[T]{
 		cacheId:    cacheId,
 		fetchItem:  fetchItem,
 		expiration: expiration,
+		renewAfter: renewAfter,
 		lock:       utils.NewStringKeyLock(),
 	}
 }
@@ -34,7 +36,7 @@ func (c *GenericCache[T]) Delete(id string) error {
 	c.lock.Lock(id)
 	defer c.lock.Unlock(id)
 
-	var err = utils.GetRedisClient().Del(context.Background(), c.getCacheKey(id)).Err()
+	var err = utils.RedisClient.Del(context.Background(), c.getCacheKey(id)).Err()
 	return err
 }
 
@@ -45,6 +47,20 @@ func (c *GenericCache[T]) Set(id string, val T) error {
 	return c._set(id, val)
 }
 
+func (c *GenericCache[T]) Renew(id string) error {
+	err := c.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Get(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *GenericCache[T]) _set(id string, val T) error {
 	// Parse T to json
 	var jsonVal, err = json.Marshal(val)
@@ -52,7 +68,7 @@ func (c *GenericCache[T]) _set(id string, val T) error {
 		return err
 	}
 
-	err = utils.GetRedisClient().Set(context.Background(), c.getCacheKey(id), jsonVal, c.expiration).Err()
+	err = utils.RedisClient.Set(context.Background(), c.getCacheKey(id), jsonVal, c.expiration).Err()
 	if err != nil {
 		return err
 	}
@@ -63,8 +79,10 @@ func (c *GenericCache[T]) _set(id string, val T) error {
 func (c *GenericCache[T]) Get(id string) (*T, error) {
 	c.lock.Lock(id)
 
-	var jsonVal, err = utils.GetRedisClient().Get(context.Background(), c.getCacheKey(id)).Result()
+	// Get data from redis
+	var jsonVal, err = utils.RedisClient.Get(context.Background(), c.getCacheKey(id)).Result()
 
+	// If redis did not contain the data, fetch new and save it
 	if err == redis.Nil {
 		var freshItem = c.fetchItem(id)
 
@@ -81,12 +99,25 @@ func (c *GenericCache[T]) Get(id string) (*T, error) {
 		return nil, err
 	}
 
+	// Renew if TTL is small enough, we will return old data for this request but it'll be renewed for next
+	go func() {
+		ttl, err := utils.RedisClient.TTL(context.Background(), c.getCacheKey(id)).Result()
+		if err != nil {
+			return
+		}
+
+		if ttl <= c.renewAfter {
+			c.Renew(id)
+		}
+	}()
+
 	// Parse json to T
 	var val T
 	err = json.Unmarshal([]byte(jsonVal), &val)
 
 	if err != nil {
 		log.Printf("%+v\n", err)
+		c.lock.Unlock(id)
 		return nil, err
 	}
 
