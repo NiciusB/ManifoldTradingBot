@@ -73,7 +73,12 @@ func placeBet(groupedBet *groupedMarketBet) {
 		LimitProb:  limitProb,
 	}
 
-	var cachedMarket = marketsCache.Get(groupedBet.marketId)
+	var cachedMarket, err = marketsCache.Get(groupedBet.marketId)
+	if err != nil {
+		log.Printf("Error getting market from cache. Error message: %v\n", err)
+		return
+	}
+
 	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
 
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"

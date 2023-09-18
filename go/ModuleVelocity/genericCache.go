@@ -2,46 +2,91 @@ package modulevelocity
 
 import (
 	"ManifoldTradingBot/utils"
+	"context"
+	"encoding/json"
+	"log"
 	"time"
 
-	cache "github.com/Code-Hex/go-generics-cache"
+	"github.com/redis/go-redis/v9"
 )
 
 type GenericCache[T interface{}] struct {
-	cache      *cache.Cache[string, T]
-	getItem    func(id string) T
+	cacheId    string
+	fetchItem  func(id string) T
 	expiration time.Duration
 	lock       *utils.StringKeyLock
 }
 
-func CreateGenericCache[T interface{}](getItem func(id string) T, expiration time.Duration) GenericCache[T] {
-	var c = cache.New[string, T]()
-
+func CreateGenericCache[T interface{}](cacheId string, fetchItem func(id string) T, expiration time.Duration) GenericCache[T] {
 	return GenericCache[T]{
-		cache:      c,
-		getItem:    getItem,
+		cacheId:    cacheId,
+		fetchItem:  fetchItem,
 		expiration: expiration,
 		lock:       utils.NewStringKeyLock(),
 	}
-
 }
 
-func (c *GenericCache[T]) Delete(id string) {
-	c.cache.Delete(id)
+func (c *GenericCache[T]) getCacheKey(id string) string {
+	return c.cacheId + ":" + id
 }
 
-func (c *GenericCache[T]) Get(id string) T {
+func (c *GenericCache[T]) Delete(id string) error {
+	var err = utils.GetRedisClient().Del(context.Background(), c.getCacheKey(id)).Err()
+	return err
+}
+
+func (c *GenericCache[T]) Set(id string, val T) error {
 	c.lock.Lock(id)
 	defer c.lock.Unlock(id)
 
-	var cachedMarket, ok = c.cache.Get(id)
-	if ok {
-		return cachedMarket
+	return c._set(id, val)
+}
+
+func (c *GenericCache[T]) _set(id string, val T) error {
+	// Parse T to json
+	var jsonVal, err = json.Marshal(val)
+	if err != nil {
+		return err
 	}
 
-	var freshItem = c.getItem(id)
+	err = utils.GetRedisClient().Set(context.Background(), c.getCacheKey(id), jsonVal, c.expiration).Err()
+	if err != nil {
+		return err
+	}
 
-	c.cache.Set(id, freshItem, cache.WithExpiration(c.expiration))
+	return nil
+}
 
-	return freshItem
+func (c *GenericCache[T]) Get(id string) (*T, error) {
+	c.lock.Lock(id)
+
+	var jsonVal, err = utils.GetRedisClient().Get(context.Background(), c.getCacheKey(id)).Result()
+
+	if err == redis.Nil {
+		var freshItem = c.fetchItem(id)
+
+		go func() {
+			c._set(id, freshItem)
+			c.lock.Unlock(id)
+		}()
+
+		return &freshItem, nil
+	}
+
+	if err != nil {
+		c.lock.Unlock(id)
+		return nil, err
+	}
+
+	// Parse json to T
+	var val T
+	err = json.Unmarshal([]byte(jsonVal), &val)
+
+	if err != nil {
+		log.Printf("%+v\n", err)
+		return nil, err
+	}
+
+	c.lock.Unlock(id)
+	return &val, nil
 }

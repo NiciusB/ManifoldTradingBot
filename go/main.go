@@ -18,6 +18,7 @@ func main() {
 	}
 
 	utils.ConnectSupabaseWebsocket()
+	utils.ConnectRedisClient()
 
 	log.Println("Bot started up correctly!")
 

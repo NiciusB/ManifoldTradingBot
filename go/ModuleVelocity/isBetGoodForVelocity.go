@@ -79,27 +79,39 @@ func isBetGoodForVelocity(bet SupabaseBet) bool {
 		return false
 	}
 
-	var cachedMarket = marketsCache.Get(bet.ContractID)
+	cachedMarket, err := marketsCache.Get(bet.ContractID)
+	if err != nil {
+		return false
+	}
 	if cachedMarket.CreatorID == bet.UserID {
 		// Ignore bets by market creator
 		return false
 	}
 
-	var myPosition = myMarketPositionCache.Get(bet.ContractID)
+	myPosition, err := myMarketPositionCache.Get(bet.ContractID)
+	if err != nil {
+		return false
+	}
 	if myPosition != nil && myPosition.Invested > 200 {
 		// Ignore markets where I am too invested. This could be increased in the future to allow larger positions
 		return false
 	}
 
-	var cachedUser = usersCache.Get(bet.UserID)
+	cachedUser, err := usersCache.Get(bet.UserID)
+	if err != nil {
+		return false
+	}
 	var isNewAccount = cachedUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3
 	if isNewAccount && cachedUser.ProfitCachedAllTime > 1000 {
 		// Ignore new accounts with large profits
 		return false
 	}
 
-	var marketVelocity = marketVelocityCache.Get(bet.ContractID)
-	if !marketVelocity {
+	marketVelocity, err := marketVelocityCache.Get(bet.ContractID)
+	if err != nil {
+		return false
+	}
+	if !*marketVelocity {
 		// Ignore markets with low volatility. This check could be improved in the future
 		return false
 	}

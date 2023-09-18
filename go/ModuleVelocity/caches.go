@@ -12,7 +12,7 @@ type cachedMarket struct {
 	URL       string
 }
 
-var marketsCache = CreateGenericCache(func(marketId string) cachedMarket {
+var marketsCache = CreateGenericCache("markets-v1", func(marketId string) cachedMarket {
 	var apiMarket = ManifoldApi.GetMarket(marketId)
 	return cachedMarket{
 		CreatorID: apiMarket.CreatorID,
@@ -26,7 +26,7 @@ type cachedUser struct {
 	ProfitCachedAllTime float64
 }
 
-var usersCache = CreateGenericCache(func(userId string) cachedUser {
+var usersCache = CreateGenericCache("users-v1", func(userId string) cachedUser {
 	var apiUser = ManifoldApi.GetUser(userId)
 	return cachedUser{
 		CreatedTime:         apiUser.CreatedTime,
@@ -35,12 +35,25 @@ var usersCache = CreateGenericCache(func(userId string) cachedUser {
 }, time.Hour*48)
 
 // My market position cache
-var myMarketPositionCache = CreateGenericCache(func(marketId string) *ManifoldApi.MarketPosition {
-	return ManifoldApi.GetMarketPositionForUser(marketId, myUserId)
+type cachedMarketPosition struct {
+	Invested float64
+}
+
+var myMarketPositionCache = CreateGenericCache("myMarketPosition-v1", func(marketId string) cachedMarketPosition {
+	var apiMarketPosition = ManifoldApi.GetMarketPositionForUser(marketId, myUserId)
+	if apiMarketPosition == nil {
+		return cachedMarketPosition{
+			Invested: 0,
+		}
+	}
+
+	return cachedMarketPosition{
+		Invested: apiMarketPosition.Invested,
+	}
 }, time.Hour*92)
 
 // Market velocity cache
-var marketVelocityCache = CreateGenericCache(func(marketId string) bool {
+var marketVelocityCache = CreateGenericCache("marketVelocity-v1", func(marketId string) bool {
 	var marketPositions []ManifoldApi.MarketPosition
 	var betsForMarket []ManifoldApi.Bet
 	var wg sync.WaitGroup
