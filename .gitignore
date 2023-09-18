@@ -5,8 +5,3 @@
 .env
 .env.*
 !.env.example
-
-# Swift
-.build/
-.swiftpm/
-CLI_build/
