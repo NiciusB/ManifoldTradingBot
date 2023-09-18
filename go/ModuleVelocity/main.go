@@ -22,8 +22,8 @@ func Run() {
 				log.Printf("Error while decoding postgres_changes: %+\n", err)
 			} else {
 				var bet = payload.Data.Record.Data
+				go warmupCachesForBet(bet)
 				processBet(bet)
-				warmupCachesForBet(bet)
 			}
 		}
 	})

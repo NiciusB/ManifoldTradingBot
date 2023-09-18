@@ -31,6 +31,9 @@ func (c *GenericCache[T]) getCacheKey(id string) string {
 }
 
 func (c *GenericCache[T]) Delete(id string) error {
+	c.lock.Lock(id)
+	defer c.lock.Unlock(id)
+
 	var err = utils.GetRedisClient().Del(context.Background(), c.getCacheKey(id)).Err()
 	return err
 }
