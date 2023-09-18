@@ -68,10 +68,10 @@ func placeBet(groupedBet *groupedMarketBet) {
 	var cachedMarket = marketsCache.Get(groupedBet.marketId)
 	log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, groupedBet, betRequest)
 
-	/*var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+	var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 	if err != nil {
 		log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
-	}*/
+	}
 
 	marketPositionsCache.DeleteCache(groupedBet.marketId)
 }
