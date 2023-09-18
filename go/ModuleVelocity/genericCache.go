@@ -26,7 +26,7 @@ func CreateGenericCache[T interface{}](getItem func(id string) T, expiration tim
 
 }
 
-func (c *GenericCache[T]) DeleteCache(id string) {
+func (c *GenericCache[T]) Delete(id string) {
 	c.cache.Delete(id)
 }
 

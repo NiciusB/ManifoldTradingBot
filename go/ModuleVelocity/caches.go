@@ -2,10 +2,11 @@ package modulevelocity
 
 import (
 	"ManifoldTradingBot/ManifoldApi"
+	"sync"
 	"time"
 )
 
-// Create caches to use on other files
+// Markets cache
 type cachedMarket struct {
 	CreatorID string
 	URL       string
@@ -17,14 +18,9 @@ var marketsCache = CreateGenericCache(func(marketId string) cachedMarket {
 		CreatorID: apiMarket.CreatorID,
 		URL:       apiMarket.URL,
 	}
-}, time.Hour*24)
+}, time.Hour*98)
 
-var marketPositionsCache = CreateGenericCache(ManifoldApi.GetMarketPositions, time.Minute*30)
-
-var betsForMarketCache = CreateGenericCache(func(marketId string) []ManifoldApi.Bet {
-	return ManifoldApi.GetAllBetsForMarket(marketId)
-}, time.Minute*15)
-
+// Users cache
 type cachedUser struct {
 	CreatedTime         int64
 	ProfitCachedAllTime float64
@@ -36,4 +32,37 @@ var usersCache = CreateGenericCache(func(userId string) cachedUser {
 		CreatedTime:         apiUser.CreatedTime,
 		ProfitCachedAllTime: apiUser.ProfitCached.AllTime,
 	}
-}, time.Hour*8)
+}, time.Hour*48)
+
+// My market position cache
+var myMarketPositionCache = CreateGenericCache(func(marketId string) *ManifoldApi.MarketPosition {
+	return ManifoldApi.GetMarketPositionForUser(marketId, myUserId)
+}, time.Hour*92)
+
+// Market velocity cache
+var marketVelocityCache = CreateGenericCache(func(marketId string) bool {
+	var marketPositions []ManifoldApi.MarketPosition
+	var betsForMarket []ManifoldApi.Bet
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+	go func() {
+		marketPositions = ManifoldApi.GetMarketPositions(marketId)
+		wg.Done()
+	}()
+	go func() {
+		betsForMarket = ManifoldApi.GetAllBetsForMarket(marketId)
+		wg.Done()
+	}()
+	wg.Wait()
+
+	var betsInLast24Hours = 0
+	for _, marketBet := range betsForMarket {
+		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
+			betsInLast24Hours++
+		}
+	}
+
+	// Returns true if the market has enough velocity for betting
+	return betsInLast24Hours >= 3 && len(marketPositions) >= 4
+}, time.Minute*15)

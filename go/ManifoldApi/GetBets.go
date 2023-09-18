@@ -3,7 +3,6 @@ package ManifoldApi
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 type Bet struct {
@@ -41,52 +40,6 @@ type Bet struct {
 		Timestamp    int64   `json:"timestamp"`
 		MatchedBetID string  `json:"matchedBetId"`
 	} `json:"fills,omitempty"`
-}
-
-var getBetsAfterTimestampIterations = 0
-
-func GetBetsAfterTimestamp(MinCreatedTime int64) []Bet {
-	var limit = 3
-	getBetsAfterTimestampIterations++
-
-	var lastBetId = ""
-	var response []Bet
-
-	for {
-		var beforeParam = ""
-		if lastBetId != "" {
-			beforeParam = "&before=" + lastBetId
-		}
-
-		sb := callManifoldApi("GET", fmt.Sprintf("v0/bets?limit=%v%v", strings.Repeat("0", getBetsAfterTimestampIterations%500)+fmt.Sprint(limit), beforeParam), nil)
-		var bets []Bet
-		json.Unmarshal([]byte(sb), &bets)
-
-		var filteredBets []Bet
-		for _, bet := range bets {
-			if bet.CreatedTime >= MinCreatedTime {
-				filteredBets = append(filteredBets, bet)
-			}
-		}
-
-		response = append(response, filteredBets...)
-
-		if len(filteredBets) < limit {
-			break
-		}
-
-		lastBetId = bets[len(bets)-1].ID
-
-		if limit < 50 {
-			limit = 50
-		} else if limit < 500 {
-			limit = 500
-		} else {
-			limit = 1000
-		}
-	}
-
-	return response
 }
 
 func GetAllBetsForMarket(marketId string) []Bet {

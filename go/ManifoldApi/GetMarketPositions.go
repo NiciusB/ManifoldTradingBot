@@ -57,3 +57,16 @@ func GetMarketPositions(marketId string) []MarketPosition {
 	json.Unmarshal([]byte(sb), &response)
 	return response
 }
+
+func GetMarketPositionForUser(marketId string, userId string) *MarketPosition {
+	sb := callManifoldApi("GET", fmt.Sprintf("v0/market/%s/positions?userId=%s", marketId, userId), nil)
+
+	var response []MarketPosition
+	json.Unmarshal([]byte(sb), &response)
+
+	if len(response) == 0 {
+		return nil
+	}
+
+	return &response[0]
+}

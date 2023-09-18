@@ -1,7 +1,6 @@
 package modulevelocity
 
 import (
-	"ManifoldTradingBot/ManifoldApi"
 	"math"
 	"slices"
 	"time"
@@ -43,9 +42,7 @@ var bannedUserIDs = []string{
 	"BB5ZIBNqNKddjaZQUnqkFCiDyTs2",
 }
 
-func isBetGoodForVelocity(payload postgresChangesPayload) bool {
-	var bet = payload.Data.Record.Data
-
+func isBetGoodForVelocity(bet SupabaseBet) bool {
 	if bet.IsAPI {
 		// Ignore bots, mainly to prevent infinite loops of one reacting to another
 		return false
@@ -88,18 +85,7 @@ func isBetGoodForVelocity(payload postgresChangesPayload) bool {
 		return false
 	}
 
-	var cachedMarketPositions = marketPositionsCache.Get(bet.ContractID)
-	if len(cachedMarketPositions) < 4 {
-		// Ignore markets with less than 4 market positions
-		return false
-	}
-
-	var myPosition *ManifoldApi.MarketPosition
-	for _, pos := range cachedMarketPositions {
-		if pos.UserID == myUserId {
-			myPosition = &pos
-		}
-	}
+	var myPosition = myMarketPositionCache.Get(bet.ContractID)
 	if myPosition != nil && myPosition.Invested > 200 {
 		// Ignore markets where I am too invested. This could be increased in the future to allow larger positions
 		return false
@@ -112,14 +98,8 @@ func isBetGoodForVelocity(payload postgresChangesPayload) bool {
 		return false
 	}
 
-	var betsForMarket = betsForMarketCache.Get(bet.ContractID)
-	var betsInLast24Hours = 0
-	for _, marketBet := range betsForMarket {
-		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
-			betsInLast24Hours++
-		}
-	}
-	if betsInLast24Hours < 3 {
+	var marketVelocity = marketVelocityCache.Get(bet.ContractID)
+	if !marketVelocity {
 		// Ignore markets with low volatility. This check could be improved in the future
 		return false
 	}
