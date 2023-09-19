@@ -30,25 +30,17 @@ func Run() {
 }
 
 func processBet(bet SupabaseBet) {
-	if !isBetGoodForVelocity(bet) {
+	var loadedCaches = loadCachesForBet(bet)
+
+	var alpha = 0.8 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.5, 0.8]). The bigger, the more we correct
+	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
+
+	if !isBetGoodForVelocity(bet, loadedCaches, limitProb) {
+		// Bet is no good for velocity, ignore
 		return
 	}
 
-	// [0.7, 0.8)
-	var alpha = rand.Float64()*0.1 + 0.7
-	var limitProb = math.Round((bet.ProbBefore*(1-alpha)+bet.ProbAfter*alpha)*100) / 100
-
-	if limitProb < math.Min(bet.ProbAfter, bet.ProbBefore) && limitProb > math.Max(bet.ProbAfter, bet.ProbBefore) {
-		// We do not have enough granularity on the limit, ignore
-		return
-	}
-
-	var outcome string
-	if bet.ProbBefore > bet.ProbAfter {
-		outcome = "YES"
-	} else {
-		outcome = "NO"
-	}
+	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
 	// [10, 30]. Might not be enough to offset api betting fees, we might need to increase in the future
 	var amount int64 = rand.Int63n(20+1) + 10
@@ -63,11 +55,10 @@ func processBet(bet SupabaseBet) {
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"
 
 	go func() {
-		var cachedMarket, _ = marketsCache.Get(bet.ContractID)
 		if doNotActuallyPlaceBets {
-			log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, bet, betRequest)
+			log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", loadedCaches.market.URL, bet, betRequest)
 		} else {
-			log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", cachedMarket.URL, bet, betRequest)
+			log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", loadedCaches.market.URL, bet, betRequest)
 		}
 	}()
 

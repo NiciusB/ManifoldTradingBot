@@ -2,6 +2,7 @@ package modulevelocity
 
 import (
 	"ManifoldTradingBot/ManifoldApi"
+	"ManifoldTradingBot/utils"
 	"sync"
 	"time"
 )
@@ -26,13 +27,18 @@ var marketsCache = CreateGenericCache("markets-v2", func(marketId string) cached
 type cachedUser struct {
 	CreatedTime         int64
 	ProfitCachedAllTime float64
+	SkillEstimate       float64 // [0-1], our own formula that estimates skill
 }
 
-var usersCache = CreateGenericCache("users-v1", func(userId string) cachedUser {
+var usersCache = CreateGenericCache("users-v3", func(userId string) cachedUser {
 	var apiUser = ManifoldApi.GetUser(userId)
+
+	var skillEstimate = 0.5 + utils.MapNumber(apiUser.ProfitCached.AllTime, -2_000, 20_000, -0.1, 0.3) + utils.MapNumber(apiUser.ProfitCached.Monthly, -2_000, 10_000, -0.1, 0.2)
+
 	return cachedUser{
 		CreatedTime:         apiUser.CreatedTime,
 		ProfitCachedAllTime: apiUser.ProfitCached.AllTime,
+		SkillEstimate:       skillEstimate,
 	}
 }, time.Hour*24*5, time.Minute*15)
 
