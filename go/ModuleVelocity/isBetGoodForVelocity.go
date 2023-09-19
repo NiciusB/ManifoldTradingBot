@@ -52,13 +52,20 @@ func isBetGoodForVelocity(
 	}
 
 	if bet.IsRedemption {
-		// Ignore redemptions
+		// Ignore redemptions, as they are always the opposite of another bet
 		return false
 	}
 
 	if bet.Amount == 0 || bet.ProbBefore == bet.ProbAfter {
 		// Ignore unfilled limit orders
 		return false
+	}
+
+	for _, fill := range bet.Fills {
+		if fill.Timestamp != bet.CreatedTime {
+			// Ignore fills of limit orders, other than the initial one
+			return false
+		}
 	}
 
 	if bet.AnswerID != "undefined" && bet.AnswerID != "" {

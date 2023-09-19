@@ -5,7 +5,6 @@ import (
 	"ManifoldTradingBot/utils"
 	"log"
 	"math"
-	"math/rand"
 	"os"
 )
 
@@ -42,8 +41,8 @@ func processBet(bet SupabaseBet) {
 
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
-	// [10, 30]. Might not be enough to offset api betting fees, we might need to increase in the future
-	var amount int64 = rand.Int63n(20+1) + 10
+	// [8, 30]. Might not be enough to offset api betting fees, we might need to increase in the future
+	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 30)))
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
 		ContractId: bet.ContractID,
