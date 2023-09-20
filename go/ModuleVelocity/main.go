@@ -107,8 +107,10 @@ func processBet(bet SupabaseBet) {
 	if !doNotActuallyPlaceBets {
 		betPerformanceInfo.betReqStartedAt = time.Now()
 		var myPlacedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
-		betPerformanceInfo.betPlacedAt = time.UnixMilli(myPlacedBet.CreatedTime)
-		if err != nil {
+		if err == nil {
+			betPerformanceInfo.betPlacedAt = time.UnixMilli(myPlacedBet.CreatedTime)
+		} else {
+			betPerformanceInfo.betPlacedAt = time.Now()
 			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo, err)
 			return
 		}
