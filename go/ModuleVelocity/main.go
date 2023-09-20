@@ -13,20 +13,22 @@ import (
 var myUserId string
 
 type betPerformanceInfoType struct {
-	receivedAt        time.Time
-	cachesLoadedAt    time.Time
-	velocityCheckedAt time.Time
-	betReqStartedAt   time.Time
-	betPlacedAt       time.Time
+	originalBetCreatedAt time.Time
+	receivedAt           time.Time
+	cachesLoadedAt       time.Time
+	velocityCheckedAt    time.Time
+	betReqStartedAt      time.Time
+	betPlacedAt          time.Time
 }
 
 func (info betPerformanceInfoType) String() string {
-	return fmt.Sprintf("{receivedAt: %s, cachesLoadedAt: +%s, velocityCheckedAt: +%s, betReqStartedAt: +%s, betPlacedAt: +%s}",
-		info.receivedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
-		info.cachesLoadedAt.Sub(info.receivedAt).String(),
-		info.velocityCheckedAt.Sub(info.receivedAt).String(),
-		info.betReqStartedAt.Sub(info.receivedAt).String(),
-		info.betPlacedAt.Sub(info.receivedAt).String(),
+	return fmt.Sprintf("{originalBetCreatedAt: %s receivedAt: %s cachesLoadedAt: +%s velocityCheckedAt: +%s betReqStartedAt: +%s betPlacedAt: +%s}",
+		info.originalBetCreatedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
+		info.receivedAt.Sub(info.originalBetCreatedAt).String(),
+		info.cachesLoadedAt.Sub(info.originalBetCreatedAt).String(),
+		info.velocityCheckedAt.Sub(info.originalBetCreatedAt).String(),
+		info.betReqStartedAt.Sub(info.originalBetCreatedAt).String(),
+		info.betPlacedAt.Sub(info.originalBetCreatedAt).String(),
 	)
 }
 
@@ -74,7 +76,7 @@ func Run() {
 }
 
 func processBet(bet SupabaseBet) {
-	var betPerformanceInfo = betPerformanceInfoType{receivedAt: time.Now()}
+	var betPerformanceInfo = betPerformanceInfoType{originalBetCreatedAt: time.UnixMilli(bet.CreatedTime), receivedAt: time.Now()}
 
 	var loadedCaches = loadCachesForBet(bet)
 	betPerformanceInfo.cachesLoadedAt = time.Now()
@@ -104,8 +106,8 @@ func processBet(bet SupabaseBet) {
 
 	if !doNotActuallyPlaceBets {
 		betPerformanceInfo.betReqStartedAt = time.Now()
-		var bet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
-		betPerformanceInfo.betPlacedAt = time.UnixMilli(bet.CreatedTime)
+		var myPlacedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+		betPerformanceInfo.betPlacedAt = time.UnixMilli(myPlacedBet.CreatedTime)
 		if err != nil {
 			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo, err)
 			return
