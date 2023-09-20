@@ -16,14 +16,16 @@ type betPerformanceInfoType struct {
 	receivedAt        time.Time
 	cachesLoadedAt    time.Time
 	velocityCheckedAt time.Time
+	betReqStartedAt   time.Time
 	betPlacedAt       time.Time
 }
 
 func (info betPerformanceInfoType) String() string {
-	return fmt.Sprintf("{receivedAt: %s, cachesLoadedAt: +%s, velocityCheckedAt: +%s, betPlacedAt: +%s}",
+	return fmt.Sprintf("{receivedAt: %s, cachesLoadedAt: +%s, velocityCheckedAt: +%s, betReqStartedAt: +%s, betPlacedAt: +%s}",
 		info.receivedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
 		info.cachesLoadedAt.Sub(info.receivedAt).String(),
 		info.velocityCheckedAt.Sub(info.receivedAt).String(),
+		info.betReqStartedAt.Sub(info.receivedAt).String(),
 		info.betPlacedAt.Sub(info.receivedAt).String(),
 	)
 }
@@ -101,15 +103,17 @@ func processBet(bet SupabaseBet) {
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"
 
 	if !doNotActuallyPlaceBets {
-		var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
-		betPerformanceInfo.betPlacedAt = time.Now()
+		betPerformanceInfo.betReqStartedAt = time.Now()
+		var bet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+		betPerformanceInfo.betPlacedAt = time.UnixMilli(bet.CreatedTime)
 		if err != nil {
-			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
+			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo, err)
 			return
 		}
 	}
 
 	if doNotActuallyPlaceBets {
+		betPerformanceInfo.betReqStartedAt = time.Now()
 		betPerformanceInfo.betPlacedAt = time.Now()
 		log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
 	} else {
