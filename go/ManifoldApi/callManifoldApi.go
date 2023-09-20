@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -70,7 +71,7 @@ func computeThroughputLimiter() {
 		throughputLimiter.calls++
 		if throughputLimiter.calls > maxPerSecond {
 			throughputLimiter.lock.Unlock()
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond*time.Duration(rand.Int63n(19)) + 1)
 			computeThroughputLimiter()
 			return
 		}

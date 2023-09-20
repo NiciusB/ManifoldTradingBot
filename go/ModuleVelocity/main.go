@@ -3,15 +3,58 @@ package modulevelocity
 import (
 	"ManifoldTradingBot/ManifoldApi"
 	"ManifoldTradingBot/utils"
+	"fmt"
 	"log"
 	"math"
 	"os"
+	"time"
 )
 
 var myUserId string
 
+type betPerformanceInfoType struct {
+	receivedAt        time.Time
+	cachesLoadedAt    time.Time
+	velocityCheckedAt time.Time
+	betPlacedAt       time.Time
+}
+
+func (info betPerformanceInfoType) String() string {
+	return fmt.Sprintf("{receivedAt: %s, cachesLoadedAt: +%s, velocityCheckedAt: +%s, betPlacedAt: +%s}",
+		info.receivedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
+		info.cachesLoadedAt.Sub(info.receivedAt).String(),
+		info.velocityCheckedAt.Sub(info.receivedAt).String(),
+		info.betPlacedAt.Sub(info.receivedAt).String(),
+	)
+}
+
 func Run() {
 	myUserId = ManifoldApi.GetMe().ID
+
+	err := utils.SendSupabaseWebsocketMessage(`{
+		"event": "phx_join",
+		"topic": "realtime:*",
+		"payload": {
+			"config": {
+				"broadcast": {
+					"self": false
+				},
+				"presence": {
+					"key": ""
+				},
+				"postgres_changes": [
+					{
+					"table": "contract_bets",
+					"event": "INSERT"
+					}
+				]
+			}
+		},
+		"ref": null
+		}`)
+	if err != nil {
+		log.Println("subscribing to supabase error:", err)
+	}
 
 	log.Println("Velocity module enabled!")
 
@@ -29,7 +72,10 @@ func Run() {
 }
 
 func processBet(bet SupabaseBet) {
+	var betPerformanceInfo = betPerformanceInfoType{receivedAt: time.Now()}
+
 	var loadedCaches = loadCachesForBet(bet)
+	betPerformanceInfo.cachesLoadedAt = time.Now()
 
 	var alpha = 0.8 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.5, 0.8]). The bigger, the more we correct
 	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
@@ -38,6 +84,7 @@ func processBet(bet SupabaseBet) {
 		// Bet is no good for velocity, ignore
 		return
 	}
+	betPerformanceInfo.velocityCheckedAt = time.Now()
 
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
@@ -53,19 +100,20 @@ func processBet(bet SupabaseBet) {
 
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"
 
-	go func() {
-		if doNotActuallyPlaceBets {
-			log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", loadedCaches.market.URL, bet, betRequest)
-		} else {
-			log.Printf("Placing velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\n", loadedCaches.market.URL, bet, betRequest)
-		}
-	}()
-
 	if !doNotActuallyPlaceBets {
 		var _, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
+		betPerformanceInfo.betPlacedAt = time.Now()
 		if err != nil {
-			log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
+			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
+			return
 		}
+	}
+
+	if doNotActuallyPlaceBets {
+		betPerformanceInfo.betPlacedAt = time.Now()
+		log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
+	} else {
+		log.Printf("Placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
 	}
 
 	// Refresh cache for my market position on this market

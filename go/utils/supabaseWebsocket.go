@@ -28,16 +28,27 @@ func AddSupabaseWebsocketEventListener(callback SupabaseEventCallback) {
 	callbacks = append(callbacks, callback)
 }
 
+func SendSupabaseWebsocketMessage(msg string) error {
+	websocketConn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	err := websocketConn.WriteMessage(websocket.TextMessage, []byte(msg))
+
+	return err
+}
+
+var websocketConn *websocket.Conn
+
 func ConnectSupabaseWebsocket() {
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
+	var err error
+	websocketConn, _, err = websocket.DefaultDialer.Dial(url, nil)
 
 	if err != nil {
 		log.Fatal("Unable to connect to supabase websocket: ", err)
 	}
 
 	go func() {
+		// Coroutine for receiving websocket messages
 		for {
-			messageType, message, err := c.ReadMessage()
+			messageType, message, err := websocketConn.ReadMessage()
 			if err != nil {
 				// We could try to gracefully recover from this in the future
 				log.Fatal("Supabase websocket connection fatal error: read:", err, ". messageType: ", messageType)
@@ -54,11 +65,11 @@ func ConnectSupabaseWebsocket() {
 		}
 	}()
 
-	sendConnectionMessage(c)
-	go sendHeartbeatMessages(c)
+	sendConnectionMessage()
+	go sendHeartbeatMessages()
 }
 
-func sendConnectionMessage(c *websocket.Conn) {
+func sendConnectionMessage() {
 	var msg = `{
 "event": "phx_join",
 "topic": "realtime:*",
@@ -69,27 +80,20 @@ func sendConnectionMessage(c *websocket.Conn) {
 		},
 		"presence": {
 			"key": ""
-		},
-		"postgres_changes": [
-			{
-			"table": "contract_bets",
-			"event": "INSERT"
-			}
-		]
+		}
 	}
 },
 "ref": null
 }`
 
-	c.SetWriteDeadline(time.Now().Add(5 * time.Second))
-	err := c.WriteMessage(websocket.TextMessage, []byte(msg))
+	err := SendSupabaseWebsocketMessage(msg)
 
 	if err != nil {
 		log.Println("sendConnectionMessage error:", err)
 	}
 }
 
-func sendHeartbeatMessages(c *websocket.Conn) {
+func sendHeartbeatMessages() {
 	for {
 		time.Sleep(time.Second * 25)
 
@@ -100,8 +104,7 @@ func sendHeartbeatMessages(c *websocket.Conn) {
 "ref": null
 }`
 
-		c.SetWriteDeadline(time.Now().Add(5 * time.Second))
-		err := c.WriteMessage(websocket.TextMessage, []byte(msg))
+		err := SendSupabaseWebsocketMessage(msg)
 
 		if err != nil {
 			log.Println("sendHeartbeatMessages error:", err)
