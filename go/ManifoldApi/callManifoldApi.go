@@ -13,7 +13,7 @@ import (
 var maxPerSecond = 99
 
 func callManifoldApi(method string, path string, reqBody io.Reader) string {
-	return callManifoldApiWithFullUrl("https://manifold.markets/api/"+method, path, reqBody)
+	return callManifoldApiWithFullUrl(method, "https://manifold.markets/api/"+path, reqBody)
 }
 func callManifoldApiWithFullUrl(method string, url string, reqBody io.Reader) string {
 	computeThroughputLimiter()
