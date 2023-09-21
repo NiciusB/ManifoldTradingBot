@@ -64,7 +64,7 @@ func Run() {
 
 	utils.AddSupabaseWebsocketEventListener(func(event utils.SupabaseEvent) {
 		if event.Event == "postgres_changes" {
-			var payload, err = parseSupabasePostgresChangePayload(event.Payload)
+			var payload, err = utils.ParseSupabasePostgresChangePayload(event.Payload)
 			if err != nil {
 				log.Printf("Error while decoding postgres_changes: %+\n", err)
 			} else {
@@ -75,7 +75,7 @@ func Run() {
 	})
 }
 
-func processBet(bet SupabaseBet) {
+func processBet(bet utils.SupabaseBet) {
 	var betPerformanceInfo = betPerformanceInfoType{originalBetCreatedAt: time.UnixMilli(bet.CreatedTime), receivedAt: time.Now()}
 
 	var loadedCaches = loadCachesForBet(bet)

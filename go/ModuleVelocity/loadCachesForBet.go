@@ -1,6 +1,7 @@
 package modulevelocity
 
 import (
+	"ManifoldTradingBot/utils"
 	"log"
 	"sync"
 )
@@ -13,7 +14,7 @@ type loadedCachesType struct {
 }
 
 func loadCachesForBet(
-	bet SupabaseBet,
+	bet utils.SupabaseBet,
 ) loadedCachesType {
 	var caches loadedCachesType
 

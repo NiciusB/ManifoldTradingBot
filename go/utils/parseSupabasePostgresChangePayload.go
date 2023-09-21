@@ -1,4 +1,4 @@
-package modulevelocity
+package utils
 
 import (
 	"time"
@@ -59,7 +59,7 @@ type postgresChangesPayload struct {
 	Ids []int
 }
 
-func parseSupabasePostgresChangePayload(payloadRaw interface{}) (*postgresChangesPayload, error) {
+func ParseSupabasePostgresChangePayload(payloadRaw interface{}) (*postgresChangesPayload, error) {
 	var result postgresChangesPayload
 	var err = mapstructure.Decode(payloadRaw, &result)
 	if err != nil {

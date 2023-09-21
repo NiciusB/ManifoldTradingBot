@@ -51,7 +51,7 @@ func PlaceBet(bet PlaceBetRequest) (*placeBetResponse, error) {
 		return nil, err
 	}
 
-	sb := callManifoldApi("POST", "v0/bet", bytes.NewBuffer(body))
+	sb := callManifoldApiWithFullUrl("POST", "https://api-nggbo3neva-uc.a.run.app/placebet", bytes.NewBuffer(body))
 
 	var response placeBetResponse
 	json.Unmarshal([]byte(sb), &response)

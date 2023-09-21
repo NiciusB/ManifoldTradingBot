@@ -1,7 +1,6 @@
 package ManifoldApi
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -14,14 +13,17 @@ import (
 var maxPerSecond = 99
 
 func callManifoldApi(method string, path string, reqBody io.Reader) string {
+	return callManifoldApiWithFullUrl("https://manifold.markets/api/"+method, path, reqBody)
+}
+func callManifoldApiWithFullUrl(method string, url string, reqBody io.Reader) string {
 	computeThroughputLimiter()
 
 	var debug = os.Getenv("MANIFOLD_API_DEBUG") == "true"
 	if debug {
-		log.Printf("callManifoldApi (%+v %+v), body:\n%+v\n", method, path, reqBody)
+		log.Printf("callManifoldApi (%+v %+v), body:\n%+v\n", method, url, reqBody)
 	}
 
-	req, err := http.NewRequest(method, fmt.Sprintf("https://manifold.markets/api/%s", path), reqBody)
+	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		log.Fatalln(err)
 	}
