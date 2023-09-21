@@ -81,7 +81,7 @@ func isBetGoodForVelocity(
 	var limitProbDiff = utils.Ternary(bet.ProbBefore > bet.ProbAfter, limitProb-bet.ProbAfter, bet.ProbAfter-limitProb) // How much we would change the market probabilities
 	var poolSize = loadedCaches.market.Pool.NO + loadedCaches.market.Pool.YES                                           // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
 	var poolSizeFactor = math.Min(poolSize, 30_000) / 30_000                                                            // From 0 to 1, 0 being pool is small, 1 being pool is huge
-	var minProbSwing = 0.05 - poolSizeFactor*0.045                                                                      // 0.05 base, down to 0.005 depending on poolSize
+	var minProbSwing = 0.1 - poolSizeFactor*0.09                                                                        // 0.1 base, down to 0.01 depending on poolSize
 	//log.Printf("%v : ProbBefore %v, ProbAfter %v, limitProb %v, limitProbDiff %v", loadedCaches.market.URL, bet.ProbBefore, bet.ProbAfter, limitProb, limitProbDiff)
 	if limitProbDiff < minProbSwing {
 		// Ignore small prob changes
@@ -105,7 +105,7 @@ func isBetGoodForVelocity(
 		outcomeWeWillWantToBuy = "NO"
 	}
 
-	if loadedCaches.myPosition.Invested > 200 && ((outcomeWeWillWantToBuy == "YES" && loadedCaches.myPosition.HasYesShares) || (outcomeWeWillWantToBuy == "NO" && !loadedCaches.myPosition.HasYesShares)) {
+	if loadedCaches.myPosition.Invested > 100 && ((outcomeWeWillWantToBuy == "YES" && loadedCaches.myPosition.HasYesShares) || (outcomeWeWillWantToBuy == "NO" && !loadedCaches.myPosition.HasYesShares)) {
 		// Ignore markets where I am too invested on one side. This could be increased in the future to allow larger positions
 		return false
 	}
