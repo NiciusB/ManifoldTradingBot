@@ -33,13 +33,13 @@ func main() {
 		go modulevelocity.Run()
 	}
 
-	// Infinite loop for keeping module goroutines alive, since they never end anyway
+	// Infinite loop for keeping module goroutines alive, since they never end anyway. We use it to monitor api queue length too
 	for {
 		time.Sleep(time.Second * 5)
 
-		var apiThroughputFillPercentage = ManifoldApi.GetThroughputFillPercentage()
-		if apiThroughputFillPercentage > 0.3 {
-			log.Printf("API throughput fill percentage is high: %v%%\n", apiThroughputFillPercentage*100)
+		var apiQueueLength = ManifoldApi.GetQueueLength()
+		if apiQueueLength >= 100 {
+			log.Printf("API queue is long: %v\n", apiQueueLength)
 		}
 	}
 }

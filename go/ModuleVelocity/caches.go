@@ -33,14 +33,18 @@ type cachedUser struct {
 var usersCache = CreateGenericCache("users-v3", func(userId string) cachedUser {
 	var apiUser = ManifoldApi.GetUser(userId)
 
-	var skillEstimate = 0.5 + utils.MapNumber(apiUser.ProfitCached.AllTime, -2_000, 20_000, -0.1, 0.3) + utils.MapNumber(apiUser.ProfitCached.Monthly, -2_000, 10_000, -0.1, 0.2)
+	// [0-1]
+	var skillEstimate = 0.5 +
+		utils.MapNumber(apiUser.ProfitCached.AllTime, -5_000, 40_000, -0.1, 0.3) +
+		utils.MapNumber(apiUser.ProfitCached.Monthly, -2_000, 10_000, -0.1, 0.2) +
+		utils.MapNumber(time.Since(time.UnixMilli(apiUser.CreatedTime)).Hours(), 0, 24*30, -0.1, 0)
 
 	return cachedUser{
 		CreatedTime:         apiUser.CreatedTime,
 		ProfitCachedAllTime: apiUser.ProfitCached.AllTime,
 		SkillEstimate:       skillEstimate,
 	}
-}, time.Hour*24*5, time.Minute*15)
+}, time.Hour*24*5, time.Minute*30)
 
 // My market position cache
 type cachedMarketPosition struct {
@@ -89,4 +93,4 @@ var marketVelocityCache = CreateGenericCache("marketVelocity-v1", func(marketId 
 
 	// Returns true if the market has enough velocity for betting
 	return betsInLast24Hours >= 6 && len(marketPositions) >= 4
-}, time.Hour*2, time.Minute)
+}, time.Hour*2, time.Minute*2)

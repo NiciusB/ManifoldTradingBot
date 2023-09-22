@@ -41,7 +41,7 @@ type SupabaseBet struct {
 	UserUsername  string  `json:"userUsername"`
 	Visibility    string  `json:"visibility"`
 }
-type postgresChangesPayload struct {
+type PostgresChangesPayload struct {
 	Data struct {
 		Columns []struct {
 			Name string `json:"name"`
@@ -59,8 +59,8 @@ type postgresChangesPayload struct {
 	Ids []int
 }
 
-func ParseSupabasePostgresChangePayload(payloadRaw interface{}) (*postgresChangesPayload, error) {
-	var result postgresChangesPayload
+func ParseSupabasePostgresChangePayload(payloadRaw interface{}) (*PostgresChangesPayload, error) {
+	var result PostgresChangesPayload
 	var err = mapstructure.Decode(payloadRaw, &result)
 	if err != nil {
 		return nil, err

@@ -62,9 +62,9 @@ func runLogicForMarket(market stockMarket) {
 	if betRequest.Amount >= minimumAmountForBet {
 		var placedBet, err = ManifoldApi.PlaceInstantlyCancelledLimitOrder(betRequest)
 		if err != nil {
-			log.Printf("Error placing bet. Request: #%+v.\nError message: %v\n", betRequest, err)
+			log.Printf("Error placing stock bet. Request: #%+v.\nError message: %v\n", betRequest, err)
 		} else {
-			log.Printf("Placed bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
+			log.Printf("Placed stock bet. Request: #%+v.\nResponse: %+v\n", betRequest, placedBet)
 		}
 	}
 }

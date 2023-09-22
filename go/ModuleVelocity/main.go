@@ -68,20 +68,20 @@ func Run() {
 			if err != nil {
 				log.Printf("Error while decoding postgres_changes: %+\n", err)
 			} else {
-				var bet = payload.Data.Record.Data
-				processBet(bet)
+				processBet(payload)
 			}
 		}
 	})
 }
 
-func processBet(bet utils.SupabaseBet) {
+func processBet(payload *utils.PostgresChangesPayload) {
+	var bet = payload.Data.Record.Data
 	var betPerformanceInfo = betPerformanceInfoType{originalBetCreatedAt: time.UnixMilli(bet.CreatedTime), receivedAt: time.Now()}
 
 	var loadedCaches = loadCachesForBet(bet)
 	betPerformanceInfo.cachesLoadedAt = time.Now()
 
-	var alpha = 0.8 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.5, 0.8]). The bigger, the more we correct
+	var alpha = 0.7 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.4, 0.7]). The bigger, the more we correct
 	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
 
 	if !isBetGoodForVelocity(bet, loadedCaches, limitProb) {
@@ -92,8 +92,8 @@ func processBet(bet utils.SupabaseBet) {
 
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
-	// [8, 30]. Might not be enough to offset api betting fees, we might need to increase in the future
-	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 30)))
+	// [8, 20]. Might not be enough to offset api betting fees, we might need to increase in the future
+	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 20)))
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
 		ContractId: bet.ContractID,
@@ -111,7 +111,7 @@ func processBet(bet utils.SupabaseBet) {
 			betPerformanceInfo.betPlacedAt = time.UnixMilli(myPlacedBet.CreatedTime)
 		} else {
 			betPerformanceInfo.betPlacedAt = time.Now()
-			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo, err)
+			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo, err)
 			return
 		}
 	}
@@ -119,9 +119,9 @@ func processBet(bet utils.SupabaseBet) {
 	if doNotActuallyPlaceBets {
 		betPerformanceInfo.betReqStartedAt = time.Now()
 		betPerformanceInfo.betPlacedAt = time.Now()
-		log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
+		log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo)
 	} else {
-		log.Printf("Placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, bet, betRequest, betPerformanceInfo)
+		log.Printf("Placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo)
 	}
 
 	// Refresh cache for my market position on this market

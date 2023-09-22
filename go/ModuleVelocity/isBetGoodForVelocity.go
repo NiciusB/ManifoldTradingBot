@@ -61,6 +61,11 @@ func isBetGoodForVelocity(
 		return false
 	}
 
+	if time.UnixMilli(bet.CreatedTime).Before(time.Now().Add(time.Second * -5)) {
+		// Ignore old bets. Sometimes supabase gives old bets for some reason
+		return false
+	}
+
 	for _, fill := range bet.Fills {
 		if fill.Timestamp != bet.CreatedTime {
 			// Ignore fills of limit orders, other than the initial one
@@ -75,13 +80,14 @@ func isBetGoodForVelocity(
 
 	if limitProb <= bet.ProbBefore || limitProb >= bet.ProbAfter {
 		// We do not have enough granularity on the limit order probabilities: We would bounce even more than the original probs
+		// This only works for betting against the latest best, if we wanted to sometimes follow it we would need to rework this check
 		return false
 	}
 
-	var limitProbDiff = utils.Ternary(bet.ProbBefore > bet.ProbAfter, limitProb-bet.ProbAfter, bet.ProbAfter-limitProb) // How much we would change the market probabilities
-	var poolSize = loadedCaches.market.Pool.NO + loadedCaches.market.Pool.YES                                           // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
-	var poolSizeFactor = math.Min(poolSize, 30_000) / 30_000                                                            // From 0 to 1, 0 being pool is small, 1 being pool is huge
-	var minProbSwing = 0.1 - poolSizeFactor*0.09                                                                        // 0.1 base, down to 0.01 depending on poolSize
+	var limitProbDiff = math.Abs(limitProb - bet.ProbAfter)                   // How much we would change the market probabilities
+	var poolSize = loadedCaches.market.Pool.NO + loadedCaches.market.Pool.YES // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
+	var poolSizeFactor = math.Min(poolSize, 50_000) / 50_000                  // From 0 to 1, 0 being pool is small, 1 being pool is huge
+	var minProbSwing = 0.08 - poolSizeFactor*0.075                            // 0.08 base, down to 0.005 depending on poolSize
 	//log.Printf("%v : ProbBefore %v, ProbAfter %v, limitProb %v, limitProbDiff %v", loadedCaches.market.URL, bet.ProbBefore, bet.ProbAfter, limitProb, limitProbDiff)
 	if limitProbDiff < minProbSwing {
 		// Ignore small prob changes

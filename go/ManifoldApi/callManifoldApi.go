@@ -3,27 +3,68 @@ package ManifoldApi
 import (
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"sync"
 	"time"
 )
 
-var maxPerSecond = 99
+type apiReqType struct {
+	method           string
+	url              string
+	reqBody          io.Reader
+	responseCallback func(string)
+}
+
+var apiReqQueue []apiReqType
+var apiReqQueueLock sync.Mutex
+var queueStartLock sync.Mutex
 
 func callManifoldApi(method string, path string, reqBody io.Reader) string {
-	return callManifoldApiWithFullUrl(method, "https://manifold.markets/api/"+path, reqBody)
-}
-func callManifoldApiWithFullUrl(method string, url string, reqBody io.Reader) string {
-	computeThroughputLimiter()
-
-	var debug = os.Getenv("MANIFOLD_API_DEBUG") == "true"
-	if debug {
-		log.Printf("callManifoldApi (%+v %+v), body:\n%+v\n", method, url, reqBody)
+	if queueStartLock.TryLock() {
+		go startConsumingQueue()
 	}
 
-	req, err := http.NewRequest(method, url, reqBody)
+	respChan := make(chan string)
+
+	apiReqQueueLock.Lock()
+	apiReqQueue = append(apiReqQueue, apiReqType{
+		method:  method,
+		url:     "https://manifold.markets/api/" + path,
+		reqBody: reqBody,
+		responseCallback: func(response string) {
+			respChan <- response
+		},
+	})
+	apiReqQueueLock.Unlock()
+
+	return <-respChan
+}
+
+func startConsumingQueue() {
+	var reqPerSecond int64 = 99 // Limit is 100 per second, use 99 to make sure we don't go over
+	var tickDuration = time.Duration(time.Second.Nanoseconds() / reqPerSecond)
+	ticker := time.NewTicker(tickDuration)
+	for {
+		<-ticker.C
+
+		apiReqQueueLock.Lock()
+		if len(apiReqQueue) > 0 {
+			apiReq := apiReqQueue[len(apiReqQueue)-1]
+			apiReqQueue = apiReqQueue[:len(apiReqQueue)-1]
+			go _consumeQueueApiReq(apiReq)
+		}
+		apiReqQueueLock.Unlock()
+	}
+}
+
+func _consumeQueueApiReq(apiReq apiReqType) {
+	var debug = os.Getenv("MANIFOLD_API_DEBUG") == "true"
+	if debug {
+		log.Printf("[callManifoldApi] method: %+v url: %+v body: %+v\n", apiReq.method, apiReq.url, apiReq.reqBody)
+	}
+
+	req, err := http.NewRequest(apiReq.method, apiReq.url, apiReq.reqBody)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -32,7 +73,7 @@ func callManifoldApiWithFullUrl(method string, url string, reqBody io.Reader) st
 
 	req.Header.Add("User-Agent", "ManifoldTradingBot/1.0.0 for @NiciusBot")
 	req.Header.Add("Authorization", "Key "+manifoldApiKey)
-	if method == "POST" && reqBody != nil {
+	if apiReq.method == "POST" && apiReq.reqBody != nil {
 		req.Header.Add("Content-Type", "application/json")
 	}
 
@@ -48,52 +89,9 @@ func callManifoldApiWithFullUrl(method string, url string, reqBody io.Reader) st
 
 	sb := string(body)
 
-	return sb
+	apiReq.responseCallback(sb)
 }
 
-type throughputLimiterType struct {
-	lock       sync.Mutex
-	lastSecond int64
-	calls      int
-}
-
-var throughputLimiter throughputLimiterType
-
-/*
-Sleeps if called more often than maxPerSecond
-*/
-func computeThroughputLimiter() {
-	throughputLimiter.lock.Lock()
-
-	var second = time.Now().Unix()
-	if second != throughputLimiter.lastSecond {
-		throughputLimiter.lastSecond = second
-		throughputLimiter.calls = 1
-	} else {
-		throughputLimiter.calls++
-		if throughputLimiter.calls > maxPerSecond {
-			throughputLimiter.lock.Unlock()
-			time.Sleep(time.Millisecond*time.Duration(rand.Int63n(19)) + 1)
-			computeThroughputLimiter()
-			return
-		}
-	}
-
-	throughputLimiter.lock.Unlock()
-}
-
-func GetThroughputFillPercentage() float64 {
-	throughputLimiter.lock.Lock()
-	defer throughputLimiter.lock.Unlock()
-
-	var second = time.Now().Unix()
-	if second != throughputLimiter.lastSecond {
-		return 0
-	} else {
-		if throughputLimiter.calls >= maxPerSecond {
-			return 1
-		} else {
-			return float64(throughputLimiter.calls) / float64(maxPerSecond)
-		}
-	}
+func GetQueueLength() int {
+	return len(apiReqQueue)
 }
