@@ -78,9 +78,11 @@ func isBetGoodForVelocity(
 		return false
 	}
 
-	if limitProb <= bet.ProbBefore || limitProb >= bet.ProbAfter {
-		// We do not have enough granularity on the limit order probabilities: We would bounce even more than the original probs
-		// This only works for betting against the latest best, if we wanted to sometimes follow it we would need to rework this check
+	// We do not have enough granularity on the limit order probabilities: We would bounce even more than the original probs
+	// This only works for betting against the latest best, if we wanted to sometimes follow it we would need to rework this check
+	var smallestProb = math.Min(bet.ProbBefore, bet.ProbAfter)
+	var largestProb = math.Max(bet.ProbBefore, bet.ProbAfter)
+	if limitProb <= smallestProb || limitProb >= largestProb {
 		return false
 	}
 
