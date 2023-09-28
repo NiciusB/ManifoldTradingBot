@@ -92,8 +92,8 @@ func processBet(payload *utils.PostgresChangesPayload) {
 
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
-	// [8, 20]. Might not be enough to offset api betting fees, we might need to increase in the future
-	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 20)))
+	// [8, 40]
+	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 40)))
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
 		ContractId: bet.ContractID,
