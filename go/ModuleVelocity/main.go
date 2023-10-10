@@ -83,13 +83,6 @@ func processBet(payload *utils.PostgresChangesPayload) {
 
 	var alpha = 0.7 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.4, 0.7]). The bigger, the more we correct
 	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
-
-	if !isBetGoodForVelocity(bet, loadedCaches, limitProb) {
-		// Bet is no good for velocity, ignore
-		return
-	}
-	betPerformanceInfo.velocityCheckedAt = time.Now()
-
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
 	// [8, 40]
@@ -101,6 +94,12 @@ func processBet(payload *utils.PostgresChangesPayload) {
 		Amount:     amount,
 		LimitProb:  limitProb,
 	}
+
+	if !isBetGoodForVelocity(bet, loadedCaches, betRequest) {
+		// Bet is no good for velocity, ignore
+		return
+	}
+	betPerformanceInfo.velocityCheckedAt = time.Now()
 
 	var doNotActuallyPlaceBets = os.Getenv("VELOCITY_MODULE_DO_NOT_ACTUALLY_PLACE_BETS") == "true"
 

@@ -1,6 +1,7 @@
 package modulevelocity
 
 import (
+	"ManifoldTradingBot/ManifoldApi"
 	"ManifoldTradingBot/utils"
 	"math"
 	"slices"
@@ -44,7 +45,7 @@ var BANNED_USER_IDS = []string{
 func isBetGoodForVelocity(
 	bet utils.SupabaseBet,
 	loadedCaches loadedCachesType,
-	limitProb float64,
+	betRequest ManifoldApi.PlaceBetRequest,
 ) bool {
 	if bet.IsAPI {
 		// Ignore bots, mainly to prevent infinite loops of one reacting to another
@@ -80,18 +81,20 @@ func isBetGoodForVelocity(
 
 	var smallestProb = math.Min(bet.ProbBefore, bet.ProbAfter)
 	var largestProb = math.Max(bet.ProbBefore, bet.ProbAfter)
-	if limitProb <= smallestProb || limitProb >= largestProb {
+	if betRequest.LimitProb <= smallestProb || betRequest.LimitProb >= largestProb {
 		// We do not have enough granularity on the limit order probabilities: We would bounce even more than the original probs
 		// This only works for betting against the latest best, if we wanted to sometimes follow it, we would need to rework this check
 		return false
 	}
 
-	var limitProbDiff = math.Abs(limitProb - bet.ProbAfter)                   // How much we would change the market probabilities
+	var betLogOdds = math.Log(bet.ProbAfter / (1 - bet.ProbAfter))
+	var betRequestLogOdds = math.Log(betRequest.LimitProb / (1 - betRequest.LimitProb))
+	var logOddsDiff = math.Abs(betRequestLogOdds - betLogOdds)                // How much we would change the market log odds
 	var poolSize = loadedCaches.market.Pool.NO + loadedCaches.market.Pool.YES // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
 	var poolSizeFactor = math.Min(poolSize, 50_000) / 50_000                  // From 0 to 1, 0 being pool is small, 1 being pool is huge
-	var minProbSwing = 0.08 - poolSizeFactor*0.0775                           // 8% base, down to 0.25% depending on poolSize
-	//log.Printf("%v : ProbBefore %v, ProbAfter %v, limitProb %v, limitProbDiff %v", loadedCaches.market.URL, bet.ProbBefore, bet.ProbAfter, limitProb, limitProbDiff)
-	if limitProbDiff < minProbSwing {
+	var minLogOddsSwing = 2 - poolSizeFactor*1.75
+	//log.Printf("[isBetGoodForVelocity] %v : ProbBefore %v, ProbAfter %v, limitProb %v, betRequestOutcome: %v, betLogOdds %v, betRequestLogOdds %v, logOddsDiff %v", loadedCaches.market.URL, bet.ProbBefore, bet.ProbAfter, betRequest.LimitProb, betRequest.Outcome, betLogOdds, betRequestLogOdds, logOddsDiff)
+	if logOddsDiff < minLogOddsSwing {
 		// Ignore small prob changes
 		return false
 	}
@@ -106,14 +109,7 @@ func isBetGoodForVelocity(
 		return false
 	}
 
-	var outcomeWeWillWantToBuy string
-	if bet.ProbBefore > bet.ProbAfter {
-		outcomeWeWillWantToBuy = "YES"
-	} else {
-		outcomeWeWillWantToBuy = "NO"
-	}
-
-	if loadedCaches.myPosition.Invested > 100 && ((outcomeWeWillWantToBuy == "YES" && loadedCaches.myPosition.HasYesShares) || (outcomeWeWillWantToBuy == "NO" && !loadedCaches.myPosition.HasYesShares)) {
+	if loadedCaches.myPosition.Invested > 100 && ((betRequest.Outcome == "YES" && loadedCaches.myPosition.HasYesShares) || (betRequest.Outcome == "NO" && !loadedCaches.myPosition.HasYesShares)) {
 		// Ignore markets where I am too invested on one side. This could be increased in the future to allow larger positions
 		return false
 	}
