@@ -22,7 +22,7 @@ type betPerformanceInfoType struct {
 }
 
 func (info betPerformanceInfoType) String() string {
-	return fmt.Sprintf("{originalBetCreatedAt: %s receivedAt: %s cachesLoadedAt: +%s velocityCheckedAt: +%s betReqStartedAt: +%s betPlacedAt: +%s}",
+	return fmt.Sprintf("{originalBetCreatedAt: %s receivedAt: %s cachesLoadedAt: %s velocityCheckedAt: %s betReqStartedAt: %s betPlacedAt: %s}",
 		info.originalBetCreatedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
 		info.receivedAt.Sub(info.originalBetCreatedAt).String(),
 		info.cachesLoadedAt.Sub(info.originalBetCreatedAt).String(),
