@@ -85,8 +85,8 @@ func processBet(payload *utils.PostgresChangesPayload) {
 	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
-	// [8, 25]
-	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 8, 25)))
+	// [10, 30]
+	var amount int64 = int64(math.Round(utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 10, 30)))
 
 	var betRequest = ManifoldApi.PlaceBetRequest{
 		ContractId: bet.ContractID,
