@@ -82,7 +82,12 @@ func processBet(payload *utils.PostgresChangesPayload) {
 	betPerformanceInfo.cachesLoadedAt = time.Now()
 
 	var alpha = 0.6 - loadedCaches.betCreatorUser.SkillEstimate*0.3 // [0, 1] (right now: [0.3, 0.6]). The bigger, the more we correct
-	var limitProb = math.Round((bet.ProbBefore*alpha+bet.ProbAfter*(1-alpha))*100) / 100
+	var beforeOdds = math.Log(bet.ProbBefore / (1 - bet.ProbBefore))
+	var afterOdds = math.Log(bet.ProbAfter / (1 - bet.ProbAfter))
+	var correctedOdds = beforeOdds*alpha + afterOdds*(1-alpha)
+	var correctedProb = math.Exp(correctedOdds) / (1 + math.Exp(correctedOdds))
+	var limitProb = math.Round(correctedProb*100) / 100 // round for manifold's limit order accuracy
+
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
 	// [10, 30]
