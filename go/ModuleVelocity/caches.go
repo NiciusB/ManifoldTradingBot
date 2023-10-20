@@ -3,6 +3,7 @@ package modulevelocity
 import (
 	"ManifoldTradingBot/ManifoldApi"
 	"ManifoldTradingBot/utils"
+	"math"
 	"time"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -70,7 +71,7 @@ var myMarketPositionCache = CreateGenericCache("myMarketPosition-v2", func(marke
 }, time.Hour*24*5, time.Hour)
 
 // Market velocity cache
-var marketVelocityCache = CreateGenericCache("marketVelocity-v7", func(marketId string) float64 {
+var marketVelocityCache = CreateGenericCache("marketVelocity-v8", func(marketId string) float64 {
 	var betsForMarket = ManifoldApi.GetAllBetsForMarket(marketId, time.Now().UnixMilli()-1000*60*60*24*31)
 
 	var uniqueBettorsInLastMonth = mapset.NewSet[string]()
@@ -109,7 +110,7 @@ betLoop:
 		uniqueBettorsInLastMonth.Add(bet.UserID)
 
 		sharesDataForStdDeviation = append(sharesDataForStdDeviation, utils.ProbToOdds(bet.ProbAfter))
-		sharesWeightForStdDeviation = append(sharesWeightForStdDeviation, bet.Shares)
+		sharesWeightForStdDeviation = append(sharesWeightForStdDeviation, math.Abs(bet.Shares))
 	}
 
 	// Minimum requirements
