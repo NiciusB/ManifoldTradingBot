@@ -79,11 +79,11 @@ func isBetGoodForVelocity(
 		return false
 	}
 
-	if loadedCaches.betCreatorUser.ProfitCachedAllTime > 1000 && (betRequest.LimitProb >= 0.98 || betRequest.LimitProb <= 0.02) {
+	if loadedCaches.betCreatorUser.ProfitCachedAllTime > 1000 && (betRequest.LimitProb >= 0.99 || betRequest.LimitProb <= 0.01) {
 		// Ignore extreme values for decent users
 		return false
 	}
-	if loadedCaches.betCreatorUser.ProfitCachedAllTime > 5000 && (betRequest.LimitProb >= 0.96 || betRequest.LimitProb <= 0.04) {
+	if loadedCaches.betCreatorUser.ProfitCachedAllTime > 5000 && (betRequest.LimitProb >= 0.97 || betRequest.LimitProb <= 0.03) {
 		// Ignore extreme values for good users
 		return false
 	}
@@ -118,19 +118,13 @@ func isBetGoodForVelocity(
 		return false
 	}
 
-	if loadedCaches.myPosition.Invested > 100 && ((betRequest.Outcome == "YES" && loadedCaches.myPosition.HasYesShares) || (betRequest.Outcome == "NO" && !loadedCaches.myPosition.HasYesShares)) {
+	if loadedCaches.myPosition.Invested > 60 && ((betRequest.Outcome == "YES" && loadedCaches.myPosition.HasYesShares) || (betRequest.Outcome == "NO" && !loadedCaches.myPosition.HasYesShares)) {
 		// Ignore markets where I am too invested on one side. This could be increased in the future to allow larger positions
 		return false
 	}
 
-	var isNewAccount = loadedCaches.betCreatorUser.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*3
-	if isNewAccount && loadedCaches.betCreatorUser.ProfitCachedAllTime > 1300 {
-		// Ignore new accounts with large profits
-		return false
-	}
-
-	if !loadedCaches.marketVelocity {
-		// Ignore markets with low volatility. This check could be improved in the future
+	if loadedCaches.marketVelocity < 0.01 {
+		// Ignore markets with low volatility
 		return false
 	}
 

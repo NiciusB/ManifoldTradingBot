@@ -10,7 +10,7 @@ type loadedCachesType struct {
 	market         cachedMarket
 	myPosition     cachedMarketPosition
 	betCreatorUser cachedUser
-	marketVelocity bool
+	marketVelocity float64 // [0-1], score for how much the market moves
 }
 
 func loadCachesForBet(

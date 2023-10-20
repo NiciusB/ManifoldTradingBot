@@ -3,6 +3,7 @@ package ManifoldApi
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 )
 
 type Bet struct {
@@ -42,7 +43,7 @@ type Bet struct {
 	} `json:"fills,omitempty"`
 }
 
-func GetAllBetsForMarket(marketId string) []Bet {
+func GetAllBetsForMarket(marketId string, timestampMin int64) []Bet {
 	var lastBetId = ""
 	var response []Bet
 	var limit = 1000
@@ -58,7 +59,13 @@ func GetAllBetsForMarket(marketId string) []Bet {
 			break
 		}
 
-		lastBetId = bets[len(bets)-1].ID
+		var lastBet = bets[len(bets)-1]
+
+		if lastBet.CreatedTime < timestampMin {
+			break
+		}
+
+		lastBetId = lastBet.ID
 	}
 
 	return response
@@ -67,7 +74,7 @@ func GetAllBetsForMarket(marketId string) []Bet {
 type getOpenLimitOrdersSummaryResponse = map[float64]float64
 
 func GetOpenLimitOrdersSummary(marketId string) getOpenLimitOrdersSummaryResponse {
-	var allBets = GetAllBetsForMarket(marketId)
+	var allBets = GetAllBetsForMarket(marketId, math.MinInt64)
 
 	var response = make(getOpenLimitOrdersSummaryResponse)
 

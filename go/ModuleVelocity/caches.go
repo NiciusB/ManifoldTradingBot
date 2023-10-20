@@ -3,8 +3,9 @@ package modulevelocity
 import (
 	"ManifoldTradingBot/ManifoldApi"
 	"ManifoldTradingBot/utils"
-	"sync"
 	"time"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 // Markets cache
@@ -37,7 +38,7 @@ var usersCache = CreateGenericCache("users-v3", func(userId string) cachedUser {
 	var skillEstimate = 0.5 +
 		utils.MapNumber(apiUser.ProfitCached.AllTime, -5_000, 40_000, -0.1, 0.3) +
 		utils.MapNumber(apiUser.ProfitCached.Monthly, -2_000, 10_000, -0.1, 0.2) +
-		utils.MapNumber(time.Since(time.UnixMilli(apiUser.CreatedTime)).Hours(), 0, 24*30, -0.1, 0)
+		utils.MapNumber(time.Since(time.UnixMilli(apiUser.CreatedTime)).Hours(), 0, 24*30, -0.2, 0)
 
 	return cachedUser{
 		CreatedTime:         apiUser.CreatedTime,
@@ -68,29 +69,32 @@ var myMarketPositionCache = CreateGenericCache("myMarketPosition-v2", func(marke
 }, time.Hour*24*5, time.Hour)
 
 // Market velocity cache
-var marketVelocityCache = CreateGenericCache("marketVelocity-v1", func(marketId string) bool {
-	var marketPositions []ManifoldApi.MarketPosition
-	var betsForMarket []ManifoldApi.Bet
-	var wg sync.WaitGroup
+var marketVelocityCache = CreateGenericCache("marketVelocity-v3", func(marketId string) float64 {
+	var betsForMarket = ManifoldApi.GetAllBetsForMarket(marketId, time.Now().UnixMilli()-1000*60*60*24*31)
 
-	wg.Add(2)
-	go func() {
-		marketPositions = ManifoldApi.GetMarketPositions(marketId)
-		wg.Done()
-	}()
-	go func() {
-		betsForMarket = ManifoldApi.GetAllBetsForMarket(marketId)
-		wg.Done()
-	}()
-	wg.Wait()
-
-	var betsInLast24Hours = 0
+	var uniqueBettorsInLastMonth = mapset.NewSet[string]()
+	var uniqueBettorsInLastWeek = mapset.NewSet[string]()
+	var uniqueBettorsInLastDay = mapset.NewSet[string]()
 	for _, marketBet := range betsForMarket {
 		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
-			betsInLast24Hours++
+			uniqueBettorsInLastDay.Add(marketBet.UserID)
 		}
+		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*7 {
+			uniqueBettorsInLastWeek.Add(marketBet.UserID)
+		}
+
+		// No need to check for CreatedTime since the GetAllBetsForMarket already has that limit
+		uniqueBettorsInLastMonth.Add(marketBet.UserID)
 	}
 
-	// Returns true if the market has enough velocity for betting
-	return betsInLast24Hours >= 6 && len(marketPositions) >= 4
-}, time.Hour*2, time.Minute*2)
+	// Minimum requirements
+	if uniqueBettorsInLastMonth.Cardinality() < 4 || uniqueBettorsInLastWeek.Cardinality() < 4 {
+		return 0
+	}
+
+	// [0-1], score for how much the market moves
+	return 0 +
+		utils.MapNumber(float64(uniqueBettorsInLastDay.Cardinality()), 0, 500, 0, 0.2) +
+		utils.MapNumber(float64(uniqueBettorsInLastWeek.Cardinality()), 0, 5000, 0, 0.4) +
+		utils.MapNumber(float64(uniqueBettorsInLastMonth.Cardinality()), 0, 400, 0, 0.4)
+}, time.Minute*30, time.Minute*2)
