@@ -21,6 +21,14 @@ type betPerformanceInfoType struct {
 	betPlacedAt          time.Time
 }
 
+type betInfo struct {
+	marketUrl          string
+	betPerformanceInfo betPerformanceInfoType
+	payload            utils.PostgresChangesPayload
+	betRequest         ManifoldApi.PlaceBetRequest
+	alpha              float64
+}
+
 func (info betPerformanceInfoType) String() string {
 	return fmt.Sprintf("{originalBetCreatedAt: %s receivedAt: %s cachesLoadedAt: %s velocityCheckedAt: %s betReqStartedAt: %s betPlacedAt: %s}",
 		info.originalBetCreatedAt.Format("2006-01-02 15:04:05.999999999 -0700"),
@@ -81,17 +89,21 @@ func processBet(payload *utils.PostgresChangesPayload) {
 	var loadedCaches = loadCachesForBet(bet)
 	betPerformanceInfo.cachesLoadedAt = time.Now()
 
-	var alpha = 0.2 + (1-loadedCaches.betCreatorUser.SkillEstimate)*0.4 // [0, 1] (right now: [0.2, 0.6]). The bigger, the more we correct
-	var beforeOdds = math.Log(bet.ProbBefore / (1 - bet.ProbBefore))
-	var afterOdds = math.Log(bet.ProbAfter / (1 - bet.ProbAfter))
+	// [0, 1] The bigger, the more we correct
+	var alpha = 0.2 +
+		utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 0, 0.4) +
+		utils.MapNumber(loadedCaches.marketVelocity, 0, 1, -0.2, 0.3)
+
+	var beforeOdds = utils.ProbToOdds(bet.ProbBefore)
+	var afterOdds = utils.ProbToOdds(bet.ProbAfter)
 	var correctedOdds = beforeOdds*alpha + afterOdds*(1-alpha)
-	var correctedProb = math.Exp(correctedOdds) / (1 + math.Exp(correctedOdds))
+	var correctedProb = utils.OddsToProb(correctedOdds)
 	var limitProb = math.Round(correctedProb*100) / 100 // round for manifold's limit order accuracy
 
 	var outcome = utils.Ternary(bet.ProbBefore > bet.ProbAfter, "YES", "NO")
 
 	// [10, 50]
-	var amount int64 = int64(math.Round(
+	var amount = int64(math.Round(
 		10 +
 			utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 0, 15) +
 			utils.MapNumber(loadedCaches.marketVelocity, 0, 1, 0, 25),
@@ -119,7 +131,14 @@ func processBet(payload *utils.PostgresChangesPayload) {
 			betPerformanceInfo.betPlacedAt = time.UnixMilli(myPlacedBet.CreatedTime)
 		} else {
 			betPerformanceInfo.betPlacedAt = time.Now()
-			log.Printf("Error placing bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\nError message: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo, err)
+			var info = betInfo{
+				marketUrl:          loadedCaches.market.URL,
+				betPerformanceInfo: betPerformanceInfo,
+				payload:            *payload,
+				betRequest:         betRequest,
+				alpha:              alpha,
+			}
+			log.Printf("Error placing bet %+v\nError message: %v\n", info, err)
 			return
 		}
 	}
@@ -127,9 +146,23 @@ func processBet(payload *utils.PostgresChangesPayload) {
 	if doNotActuallyPlaceBets {
 		betPerformanceInfo.betReqStartedAt = time.Now()
 		betPerformanceInfo.betPlacedAt = time.Now()
-		log.Printf("Would've placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo)
+		var info = betInfo{
+			marketUrl:          loadedCaches.market.URL,
+			betPerformanceInfo: betPerformanceInfo,
+			payload:            *payload,
+			betRequest:         betRequest,
+			alpha:              alpha,
+		}
+		log.Printf("Would've placed velocity bet: %+v\n", info)
 	} else {
-		log.Printf("Placed velocity bet on market: %v\nBet info: %+v\nOur bet: %+v\nBet performance: %v\n", loadedCaches.market.URL, payload, betRequest, betPerformanceInfo)
+		var info = betInfo{
+			marketUrl:          loadedCaches.market.URL,
+			betPerformanceInfo: betPerformanceInfo,
+			payload:            *payload,
+			betRequest:         betRequest,
+			alpha:              alpha,
+		}
+		log.Printf("Placed velocity bet: %+v\n", info)
 	}
 
 	// Refresh cache for my market position on this market

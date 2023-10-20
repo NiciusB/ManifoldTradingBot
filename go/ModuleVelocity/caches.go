@@ -6,6 +6,7 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set/v2"
+	stat "gonum.org/v1/gonum/stat"
 )
 
 // Markets cache
@@ -69,22 +70,46 @@ var myMarketPositionCache = CreateGenericCache("myMarketPosition-v2", func(marke
 }, time.Hour*24*5, time.Hour)
 
 // Market velocity cache
-var marketVelocityCache = CreateGenericCache("marketVelocity-v3", func(marketId string) float64 {
+var marketVelocityCache = CreateGenericCache("marketVelocity-v7", func(marketId string) float64 {
 	var betsForMarket = ManifoldApi.GetAllBetsForMarket(marketId, time.Now().UnixMilli()-1000*60*60*24*31)
 
 	var uniqueBettorsInLastMonth = mapset.NewSet[string]()
 	var uniqueBettorsInLastWeek = mapset.NewSet[string]()
 	var uniqueBettorsInLastDay = mapset.NewSet[string]()
-	for _, marketBet := range betsForMarket {
-		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
-			uniqueBettorsInLastDay.Add(marketBet.UserID)
+	var sharesDataForStdDeviation []float64
+	var sharesWeightForStdDeviation []float64
+
+betLoop:
+	for _, bet := range betsForMarket {
+		if bet.IsRedemption {
+			// Ignore redemptions, as they are always the opposite of another bet
+			continue
 		}
-		if marketBet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*7 {
-			uniqueBettorsInLastWeek.Add(marketBet.UserID)
+
+		if bet.Amount == 0 || bet.ProbBefore == bet.ProbAfter {
+			// Ignore unfilled limit orders
+			continue
+		}
+
+		for _, fill := range bet.Fills {
+			if fill.Timestamp != bet.CreatedTime {
+				// Ignore fills of limit orders, other than the initial one
+				continue betLoop
+			}
+		}
+
+		if bet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24 {
+			uniqueBettorsInLastDay.Add(bet.UserID)
+		}
+		if bet.CreatedTime > time.Now().UnixMilli()-1000*60*60*24*7 {
+			uniqueBettorsInLastWeek.Add(bet.UserID)
 		}
 
 		// No need to check for CreatedTime since the GetAllBetsForMarket already has that limit
-		uniqueBettorsInLastMonth.Add(marketBet.UserID)
+		uniqueBettorsInLastMonth.Add(bet.UserID)
+
+		sharesDataForStdDeviation = append(sharesDataForStdDeviation, utils.ProbToOdds(bet.ProbAfter))
+		sharesWeightForStdDeviation = append(sharesWeightForStdDeviation, bet.Shares)
 	}
 
 	// Minimum requirements
@@ -92,9 +117,12 @@ var marketVelocityCache = CreateGenericCache("marketVelocity-v3", func(marketId 
 		return 0
 	}
 
+	var stdDeviation = stat.PopStdDev(sharesDataForStdDeviation, sharesWeightForStdDeviation)
+
 	// [0-1], score for how much the market moves
 	return 0 +
-		utils.MapNumber(float64(uniqueBettorsInLastDay.Cardinality()), 0, 500, 0, 0.2) +
-		utils.MapNumber(float64(uniqueBettorsInLastWeek.Cardinality()), 0, 5000, 0, 0.4) +
-		utils.MapNumber(float64(uniqueBettorsInLastMonth.Cardinality()), 0, 400, 0, 0.4)
+		utils.MapNumber(float64(uniqueBettorsInLastDay.Cardinality()), 0, 100, 0, 0.1) +
+		utils.MapNumber(float64(uniqueBettorsInLastWeek.Cardinality()), 0, 500, 0, 0.2) +
+		utils.MapNumber(float64(uniqueBettorsInLastMonth.Cardinality()), 0, 1000, 0, 0.2) +
+		utils.MapNumber(stdDeviation, 0, 5, 0, 0.5)
 }, time.Minute*30, time.Minute*2)
