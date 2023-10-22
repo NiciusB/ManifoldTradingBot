@@ -90,8 +90,8 @@ func processBet(payload *utils.PostgresChangesPayload) {
 	betPerformanceInfo.cachesLoadedAt = time.Now()
 
 	// [0, 1] The bigger, the more we correct
-	var alpha = 0.2 +
-		utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 0, 0.4) +
+	var alpha = 0.3 +
+		utils.MapNumber(loadedCaches.betCreatorUser.SkillEstimate, 1, 0, 0, 0.3) +
 		utils.MapNumber(loadedCaches.marketVelocity, 0, 1, -0.2, 0.3)
 
 	var beforeOdds = utils.ProbToOdds(bet.ProbBefore)
