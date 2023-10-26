@@ -101,7 +101,7 @@ func isBetGoodForVelocity(
 	var logOddsDiff = math.Abs(betRequestLogOdds - betLogOdds)                // How much we would change the market log odds
 	var poolSize = loadedCaches.market.Pool.NO + loadedCaches.market.Pool.YES // 100 is the current minimum, 1_000 is decently sized, >10_000 is a big market, >100_000 is larger than LK-99
 	var poolSizeFactor = math.Min(poolSize, 50_000) / 50_000                  // From 0 to 1, 0 being pool is small, 1 being pool is huge
-	var minLogOddsSwing = 0.3 - poolSizeFactor*0.295
+	var minLogOddsSwing = 0.4 - poolSizeFactor*0.39
 	//log.Printf("[isBetGoodForVelocity] %v : ProbBefore %v, ProbAfter %v, limitProb %v, betRequestOutcome: %v, betLogOdds %v, betRequestLogOdds %v, logOddsDiff %v", loadedCaches.market.URL, bet.ProbBefore, bet.ProbAfter, betRequest.LimitProb, betRequest.Outcome, betLogOdds, betRequestLogOdds, logOddsDiff)
 	if logOddsDiff < minLogOddsSwing {
 		// Ignore small prob changes
