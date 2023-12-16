@@ -25,7 +25,7 @@ func main() {
 
 	var enableStockModule = os.Getenv("ENABLE_STOCK_MODULE") != "false"
 	if enableStockModule {
-		go modulestock.Run()
+		// go modulestock.Run()
 	}
 
 	var enableVelocityModule = os.Getenv("ENABLE_VELOCITY_MODULE") != "false"
