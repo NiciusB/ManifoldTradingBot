@@ -30,7 +30,7 @@ func callManifoldApi(method string, path string, reqBody io.Reader) string {
 	apiReqQueueLock.Lock()
 	apiReqQueue = append(apiReqQueue, apiReqType{
 		method:  method,
-		url:     "https://manifold.markets/api/" + path,
+		url:     "https://api.manifold.markets/" + path,
 		reqBody: reqBody,
 		responseCallback: func(response string) {
 			respChan <- response

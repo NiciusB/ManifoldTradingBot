@@ -2,7 +2,6 @@ package main
 
 import (
 	"ManifoldTradingBot/ManifoldApi"
-	modulestock "ManifoldTradingBot/ModuleStock"
 	modulevelocity "ManifoldTradingBot/ModuleVelocity"
 	"ManifoldTradingBot/utils"
 	"log"
@@ -22,11 +21,6 @@ func main() {
 	utils.ConnectRedisClient()
 
 	log.Println("Bot started up correctly!")
-
-	var enableStockModule = os.Getenv("ENABLE_STOCK_MODULE") != "false"
-	if enableStockModule {
-		// go modulestock.Run()
-	}
 
 	var enableVelocityModule = os.Getenv("ENABLE_VELOCITY_MODULE") != "false"
 	if enableVelocityModule {
