@@ -24,7 +24,7 @@ type betPerformanceInfoType struct {
 type betInfo struct {
 	marketUrl          string
 	betPerformanceInfo betPerformanceInfoType
-	payload            utils.PostgresChangesPayload
+	bet                utils.ManifoldWebsocketBet
 	betRequest         ManifoldApi.PlaceBetRequest
 	alpha              float64
 }
@@ -43,7 +43,7 @@ func (info betPerformanceInfoType) String() string {
 func Run() {
 	myUserId = ManifoldApi.GetMe().ID
 
-	err := utils.SendSupabaseWebsocketMessage(`{
+	err := utils.SendManifoldApiWebsocketMessage(`{
 		"event": "phx_join",
 		"topic": "realtime:*",
 		"payload": {
@@ -70,20 +70,21 @@ func Run() {
 
 	log.Println("Velocity module enabled!")
 
-	utils.AddSupabaseWebsocketEventListener(func(event utils.SupabaseEvent) {
-		if event.Event == "postgres_changes" {
-			var payload, err = utils.ParseSupabasePostgresChangePayload(event.Payload)
+	utils.AddManifoldWebsocketEventListener(func(event utils.ManifoldSocketEvent) {
+		if event.Topic == "global/new-bet" {
+			var data, err = utils.ParseManifoldNewBetEventPayload(event.Data)
 			if err != nil {
-				log.Printf("Error while decoding postgres_changes: %+\n", err)
+				log.Printf("Error while decoding manifold event data: %+\n", err)
 			} else {
-				processBet(payload)
+				for _, bet := range data.Bets {
+					go processBet(bet)
+				}
 			}
 		}
 	})
 }
 
-func processBet(payload *utils.PostgresChangesPayload) {
-	var bet = payload.Data.Record.Data
+func processBet(bet utils.ManifoldWebsocketBet) {
 	var betPerformanceInfo = betPerformanceInfoType{originalBetCreatedAt: time.UnixMilli(bet.CreatedTime), receivedAt: time.Now()}
 
 	var loadedCaches = loadCachesForBet(bet)
@@ -134,7 +135,7 @@ func processBet(payload *utils.PostgresChangesPayload) {
 			var info = betInfo{
 				marketUrl:          loadedCaches.market.URL,
 				betPerformanceInfo: betPerformanceInfo,
-				payload:            *payload,
+				bet:                bet,
 				betRequest:         betRequest,
 				alpha:              alpha,
 			}
@@ -149,7 +150,7 @@ func processBet(payload *utils.PostgresChangesPayload) {
 		var info = betInfo{
 			marketUrl:          loadedCaches.market.URL,
 			betPerformanceInfo: betPerformanceInfo,
-			payload:            *payload,
+			bet:                bet,
 			betRequest:         betRequest,
 			alpha:              alpha,
 		}
@@ -158,7 +159,7 @@ func processBet(payload *utils.PostgresChangesPayload) {
 		var info = betInfo{
 			marketUrl:          loadedCaches.market.URL,
 			betPerformanceInfo: betPerformanceInfo,
-			payload:            *payload,
+			bet:                bet,
 			betRequest:         betRequest,
 			alpha:              alpha,
 		}

@@ -14,7 +14,7 @@ type loadedCachesType struct {
 }
 
 func loadCachesForBet(
-	bet utils.SupabaseBet,
+	bet utils.ManifoldWebsocketBet,
 ) loadedCachesType {
 	var caches loadedCachesType
 

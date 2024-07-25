@@ -17,7 +17,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	utils.ConnectSupabaseWebsocket()
+	utils.ConnectManifoldApiWebsocket()
 	utils.ConnectRedisClient()
 
 	log.Println("Bot started up correctly!")

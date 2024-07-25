@@ -43,7 +43,7 @@ var BANNED_USER_IDS = []string{
 }
 
 func isBetGoodForVelocity(
-	bet utils.SupabaseBet,
+	bet utils.ManifoldWebsocketBet,
 	loadedCaches loadedCachesType,
 	betRequest ManifoldApi.PlaceBetRequest,
 ) bool {

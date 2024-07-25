@@ -1,67 +1,55 @@
 package utils
 
 import (
-	"time"
-
 	"github.com/mitchellh/mapstructure"
 )
 
-type SupabaseBet struct {
-	Amount      int    `json:"amount"`
-	AnswerID    string `json:"answerID"`
-	ContractID  string `json:"contractId"`
-	CreatedTime int64  `json:"createdTime"`
-	Fees        struct {
-		CreatorFee   int `json:"creatorFee"`
-		LiquidityFee int `json:"liquidityFee"`
-		PlatformFee  int `json:"platformFee"`
+type ManifoldWebsocketBet struct {
+	ID   string `json:"id"`
+	Fees struct {
+		CreatorFee   float64 `json:"creatorFee"`
+		PlatformFee  int     `json:"platformFee"`
+		LiquidityFee int     `json:"liquidityFee"`
 	} `json:"fees"`
 	Fills []struct {
-		Amount       int     `json:"amount"`
-		MatchedBetID string  `json:"matchedBetId"`
-		Shares       float64 `json:"shares"`
-		Timestamp    int64   `json:"timestamp"`
+		Fees struct {
+			CreatorFee   float64 `json:"creatorFee"`
+			PlatformFee  int     `json:"platformFee"`
+			LiquidityFee int     `json:"liquidityFee"`
+		} `json:"fees"`
+		Amount       float64     `json:"amount"`
+		Shares       float64     `json:"shares"`
+		Timestamp    int64       `json:"timestamp"`
+		MatchedBetID interface{} `json:"matchedBetId"`
 	} `json:"fills"`
-	ID            string  `json:"id"`
-	IsAnte        bool    `json:"isAnte"`
-	IsAPI         bool    `json:"isApi"`
-	IsCancelled   bool    `json:"isCancelled"`
-	IsChallenge   bool    `json:"isChallenge"`
-	IsFilled      bool    `json:"isFilled"`
-	IsRedemption  bool    `json:"isRedemption"`
-	LoanAmount    int     `json:"loanAmount"`
-	OrderAmount   int     `json:"orderAmount"`
-	Outcome       string  `json:"outcome"`
-	ProbAfter     float64 `json:"probAfter"`
-	ProbBefore    float64 `json:"probBefore"`
-	Shares        float64 `json:"shares"`
-	UserAvatarURL string  `json:"userAvatarUrl"`
-	UserID        string  `json:"userId"`
-	UserName      string  `json:"userName"`
-	UserUsername  string  `json:"userUsername"`
-	Visibility    string  `json:"visibility"`
+	IsAPI        bool    `json:"isApi"`
+	Amount       float64 `json:"amount"`
+	Shares       float64 `json:"shares"`
+	UserID       string  `json:"userId"`
+	Outcome      string  `json:"outcome"`
+	AnswerID     string  `json:"answerId"`
+	IsFilled     bool    `json:"isFilled"`
+	ExpiresAt    int64   `json:"expiresAt,omitempty"`
+	LimitProb    float64 `json:"limitProb,omitempty"`
+	ProbAfter    float64 `json:"probAfter"`
+	BetGroupID   string  `json:"betGroupId"`
+	ContractID   string  `json:"contractId"`
+	LoanAmount   int     `json:"loanAmount"`
+	ProbBefore   float64 `json:"probBefore"`
+	Visibility   string  `json:"visibility"`
+	CreatedTime  int64   `json:"createdTime"`
+	IsCancelled  bool    `json:"isCancelled"`
+	OrderAmount  int     `json:"orderAmount"`
+	IsRedemption bool    `json:"isRedemption"`
+	BetID        string  `json:"betId"`
 }
-type PostgresChangesPayload struct {
-	Data struct {
-		Columns []struct {
-			Name string `json:"name"`
-			Type string `json:"type"`
-		} `json:"columns"`
-		CommitTimestamp time.Time   `json:"commit_timestamp"`
-		Errors          interface{} `json:"errors"`
-		Record          struct {
-			Data SupabaseBet `json:"data"`
-		} `json:"record"`
-		Schema string `json:"schema"`
-		Table  string `json:"table"`
-		Type   string `json:"type"`
-	}
-	Ids []int
+type ManifolWebsocketNewBetEventData struct {
+	Bets []ManifoldWebsocketBet `json:"bets"`
 }
 
-func ParseSupabasePostgresChangePayload(payloadRaw interface{}) (*PostgresChangesPayload, error) {
-	var result PostgresChangesPayload
-	var err = mapstructure.Decode(payloadRaw, &result)
+func ParseManifoldNewBetEventPayload(dataRaw interface{}) (*ManifolWebsocketNewBetEventData, error) {
+	var result ManifolWebsocketNewBetEventData
+	var err = mapstructure.Decode(dataRaw, &result)
 	if err != nil {
 		return nil, err
 	}
