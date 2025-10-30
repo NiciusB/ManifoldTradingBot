@@ -1,5 +1,4 @@
 import { PlaceBetRequest } from "./api/placeBet.ts";
-import { WsBet } from "./api/ws/parseManifoldWsNewBetEvent.ts";
 import { CachedMarket } from "./caches/marketsCache.ts";
 import { CachedMarketPosition } from "./caches/myMarketPositionCache.ts";
 import { CachedUser } from "./caches/usersCache.ts";
@@ -22,7 +21,19 @@ export type IsGoodForVelocityOutcome =
   | "ignored-too-invested";
 
 export function isBetGoodForVelocity(
-  bet: WsBet,
+  bet: {
+    probBefore?: number;
+    probAfter?: number;
+    userId: string;
+    limitProb?: number;
+    amount: number;
+    isRedemption?: boolean;
+    isApi?: boolean;
+    createdTime: number;
+    fills?: {
+      timestamp: number;
+    }[];
+  },
   caches: {
     market: CachedMarket;
     user: CachedUser;
@@ -35,9 +46,10 @@ export function isBetGoodForVelocity(
       "Bet event must have probBefore and probAfter for our logic",
     );
   }
-
   if (betRequest.limitProb === undefined) {
-    throw new Error("Bet request must have limitProb for our velocity check");
+    throw new Error(
+      "Bet request must have limitProb for our logic",
+    );
   }
 
   // Ignore redemptions, as they are always the opposite of another bet

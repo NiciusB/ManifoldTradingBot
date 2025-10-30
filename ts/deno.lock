@@ -1,12 +1,24 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:zod@*": "3.25.76",
-    "npm:zod@3": "3.25.76"
+    "jsr:@std/assert@^1.0.15": "1.0.15",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "npm:zod@^4.1.12": "4.1.12"
+  },
+  "jsr": {
+    "@std/assert@1.0.15": {
+      "integrity": "d64018e951dbdfab9777335ecdb000c0b4e3df036984083be219ce5941e4703b",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    }
   },
   "npm": {
-    "zod@3.25.76": {
-      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
+    "zod@4.1.12": {
+      "integrity": "sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ=="
     }
   },
   "remote": {
@@ -15,8 +27,8 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@std/assert@1",
-      "npm:zod@3"
+      "jsr:@std/assert@^1.0.15",
+      "npm:zod@^4.1.12"
     ]
   }
 }

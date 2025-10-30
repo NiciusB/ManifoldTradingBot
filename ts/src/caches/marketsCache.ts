@@ -3,7 +3,6 @@ import { Cache } from "./cache.ts";
 
 export interface CachedMarket {
   creatorId: string;
-  url: string;
   volume: number;
   volume24Hours: number;
   totalShares: number;
@@ -11,6 +10,7 @@ export interface CachedMarket {
 
 // Markets cache - 1 day TTL, 15 min minimum refresh
 export const marketsCache = new Cache<CachedMarket>(
+  "marketsCacheV1",
   async (marketId: string): Promise<CachedMarket> => {
     const apiMarket = await getMarket(marketId);
 
@@ -34,7 +34,6 @@ export const marketsCache = new Cache<CachedMarket>(
 
     return {
       creatorId: apiMarket.creatorId,
-      url: apiMarket.url,
       volume: apiMarket.volume,
       volume24Hours: apiMarket.volume24Hours,
       totalShares,

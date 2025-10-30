@@ -9,18 +9,18 @@ import { isBetGoodForVelocity } from "./isBetGoodForVelocity.ts";
 import { oddsToProb, probToOdds } from "./utils/math.ts";
 
 export async function processBetEvent(bet: WsBet): Promise<void> {
+  if (bet.probBefore === undefined || bet.probAfter === undefined) {
+    throw new Error(
+      "Bet event must have probBefore and probAfter for our logic",
+    );
+  }
+
   const caches = await loadCachesForBet(bet);
 
   // [0, 1] The bigger, the more we correct
   const alpha = 0.2 +
     caches.user.skillEstimate * 0.4 +
     caches.market.volume24Hours / (caches.market.volume + 1) * 0.3;
-
-  if (bet.probBefore === undefined || bet.probAfter === undefined) {
-    throw new Error(
-      "Bet event must have probBefore and probAfter for our logic",
-    );
-  }
 
   const beforeOdds = probToOdds(bet.probBefore);
   const afterOdds = probToOdds(bet.probAfter);

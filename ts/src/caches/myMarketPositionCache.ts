@@ -3,7 +3,6 @@ import { getMyUserId } from "../me.ts";
 import { Cache } from "./cache.ts";
 
 export interface CachedMarketPosition {
-  totalInvested: number;
   positions: {
     answerId?: string;
     hasYesShares: boolean;
@@ -13,16 +12,13 @@ export interface CachedMarketPosition {
 
 // My market position cache - 5 days TTL, 1 hour minimum refresh
 export const myMarketPositionCache = new Cache<CachedMarketPosition>(
+  "myMarketPositionCacheV1",
   async (marketId: string): Promise<CachedMarketPosition> => {
     const apiMarketPositions = await getMarketPositionsForUser(
       marketId,
       getMyUserId(),
     );
     return {
-      totalInvested: apiMarketPositions.map((x) => x.invested ?? 0).reduce(
-        (a, b) => a + b,
-        0,
-      ),
       positions: apiMarketPositions.map((x) => ({
         answerId: x.answerId ?? undefined,
         hasYesShares: x.hasYesShares ?? false,

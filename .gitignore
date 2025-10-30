@@ -1,7 +1,0 @@
-# Go executable
-/go/manifoldtradingbot
-
-# Env
-.env
-.env.*
-!.env.example

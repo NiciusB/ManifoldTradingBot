@@ -4,13 +4,13 @@ import { mapNumber } from "../utils/math.ts";
 import { Cache } from "./cache.ts";
 
 export interface CachedUser {
-  createdTime: number;
   profitCachedAllTime: number;
   skillEstimate: number; // [0-1], our own formula that estimates skill
 }
 
 // Users cache - 5 days TTL, 30 minutes minimum refresh
 export const usersCache = new Cache<CachedUser>(
+  "usersCacheV1",
   async (userId: string): Promise<CachedUser> => {
     const [apiUser, monthlyPortfolioHistory] = await Promise.all(
       [
@@ -42,7 +42,6 @@ export const usersCache = new Cache<CachedUser>(
       );
 
     return {
-      createdTime: apiUser.createdTime,
       profitCachedAllTime: allTimeProfit,
       skillEstimate,
     };

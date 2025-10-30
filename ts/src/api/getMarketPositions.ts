@@ -7,6 +7,7 @@ export const ContractMetricSchema = z.object({
 
   from: z
     .record(
+      z.string(),
       z.object({
         profit: z.number(),
         profitPercent: z.number(),
