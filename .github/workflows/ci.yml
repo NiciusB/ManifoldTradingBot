@@ -42,6 +42,7 @@ jobs:
         run: |
           echo "$SSH_KEY" > deploy_key
           chmod 600 deploy_key
-          scp -O -i deploy_key -o StrictHostKeyChecking=no dist/ManifoldTradingBot $SSH_USERNAME@$SSH_HOST:/home/manifoldtradingbot/ManifoldTradingBot
-          ssh -O -i deploy_key -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl restart manifold-trading-bot"
+          ssh -i deploy_key -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl stop manifold-trading-bot"
+          scp -i deploy_key -o StrictHostKeyChecking=no dist/ManifoldTradingBot $SSH_USERNAME@$SSH_HOST:/home/manifoldtradingbot/ManifoldTradingBot
+          ssh -i deploy_key -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl start manifold-trading-bot"
           rm deploy_key
