@@ -6,7 +6,7 @@ import { WsBet } from "./api/ws/parseManifoldWsNewBetEvent.ts";
 import { loadCachesForBet } from "./caches/loadCachesForBet.ts";
 import { myMarketPositionCache } from "./caches/myMarketPositionCache.ts";
 import { isBetGoodForVelocity } from "./isBetGoodForVelocity.ts";
-import { oddsToProb, probToOdds } from "./utils/math.ts";
+import { mapNumber, oddsToProb, probToOdds } from "./utils/math.ts";
 
 export async function processBetEvent(bet: WsBet): Promise<void> {
   if (bet.probBefore === undefined || bet.probAfter === undefined) {
@@ -22,7 +22,9 @@ export async function processBetEvent(bet: WsBet): Promise<void> {
     (caches.market.volume + 1);
 
   // [0, 1] The bigger, the more we correct
-  const alpha = 0.2 + caches.user.skillEstimate * 0.5 + marketVelocity * 0.2;
+  const alpha = 0.2 +
+    mapNumber(caches.user.skillEstimate, 1, 0, 0, 0.5) +
+    mapNumber(marketVelocity, 0, 1, -0.2, 0.3);
 
   const beforeOdds = probToOdds(bet.probBefore);
   const afterOdds = probToOdds(bet.probAfter);
@@ -35,8 +37,8 @@ export async function processBetEvent(bet: WsBet): Promise<void> {
   // [10, 50] How much mana to bet
   const amount = Math.round(
     10 +
-      caches.user.skillEstimate * 15 +
-      marketVelocity * 25,
+      mapNumber(caches.user.skillEstimate, 1, 0, 0, 15) +
+      mapNumber(marketVelocity, 0, 1, 0, 25),
   );
 
   const betRequest: PlaceBetRequest = {
