@@ -13,6 +13,7 @@ Deno.test("isBetGoodForVelocity - should reject missing probabilities", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -56,6 +57,7 @@ Deno.test("isBetGoodForVelocity - should ignore redemptions", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -96,6 +98,7 @@ Deno.test("isBetGoodForVelocity - should ignore bots", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -135,6 +138,7 @@ Deno.test("isBetGoodForVelocity - should ignore unfilled limit orders", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -175,6 +179,7 @@ Deno.test("isBetGoodForVelocity - should ignore market creator", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -214,6 +219,7 @@ Deno.test("isBetGoodForVelocity - should ignore old bets", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -253,6 +259,7 @@ Deno.test("isBetGoodForVelocity - should ignore low volume markets", () => {
       volume: 4000, // Low volume
       volume24Hours: 50, // Low 24h volume
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -292,6 +299,7 @@ Deno.test("isBetGoodForVelocity - should ignore scary users", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -336,6 +344,7 @@ Deno.test("isBetGoodForVelocity - should ignore limit order fills", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -375,6 +384,7 @@ Deno.test("isBetGoodForVelocity - should ignore extreme values for decent users"
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 2000, // Decent user
@@ -414,6 +424,7 @@ Deno.test("isBetGoodForVelocity - should ignore extreme values for good users", 
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 6000, // Good user
@@ -453,6 +464,7 @@ Deno.test("isBetGoodForVelocity - should ignore insufficient granularity", () =>
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -492,6 +504,7 @@ Deno.test("isBetGoodForVelocity - should ignore small probability changes", () =
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -531,6 +544,7 @@ Deno.test("isBetGoodForVelocity - should ignore too invested positions", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
@@ -574,6 +588,7 @@ Deno.test("isBetGoodForVelocity - should accept good bets", () => {
       volume: 10000,
       volume24Hours: 1000,
       totalShares: 20000,
+      uniqueBettorCount: 10,
     },
     user: {
       profitCachedAllTime: 0,
