@@ -25,7 +25,7 @@ jobs:
         run: deno test --allow-all
 
       - name: Build Linux executable
-        run: deno compile --allow-read --allow-net --target x86_64-unknown-linux-gnu --output dist/ManifoldTradingBot src/main.ts
+        run: deno compile --allow-env --allow-write --allow-read --allow-net --target x86_64-unknown-linux-gnu --output dist/ManifoldTradingBot src/main.ts
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -42,6 +42,6 @@ jobs:
         run: |
           echo "$SSH_KEY" > deploy_key
           chmod 600 deploy_key
-          scp -r -i deploy_key -o StrictHostKeyChecking=no dist/ManifoldTradingBot $SSH_USERNAME@$SSH_HOST:/home/manifoldtradingbot/ManifoldTradingBot
+          scp -i deploy_key -o StrictHostKeyChecking=no dist/ManifoldTradingBot $SSH_USERNAME@$SSH_HOST:/home/manifoldtradingbot/ManifoldTradingBot
           ssh -i deploy_key -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl restart manifold-trading-bot"
           rm deploy_key
