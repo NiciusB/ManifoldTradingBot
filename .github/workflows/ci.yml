@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -25,10 +25,10 @@ jobs:
         run: deno test --allow-all
 
       - name: Build Linux executable
-        run: deno compile --target x86_64-unknown-linux-gnu --output dist/ManifoldTradingBot src/main.ts
+        run: deno compile --allow-read --allow-net --target x86_64-unknown-linux-gnu --output dist/ManifoldTradingBot src/main.ts
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ManifoldTradingBot-linux
           path: dist/ManifoldTradingBot

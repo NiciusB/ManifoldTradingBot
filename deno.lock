@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@std/assert@^1.0.15": "1.0.15",
+    "jsr:@std/dotenv@~0.225.5": "0.225.5",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:zod@^4.1.12": "4.1.12"
   },
@@ -11,6 +12,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/dotenv@0.225.5": {
+      "integrity": "9ce6f9d0ec3311f74a32535aa1b8c62ed88b1ab91b7f0815797d77a6f60c922f"
     },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
@@ -28,6 +32,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@^1.0.15",
+      "jsr:@std/dotenv@~0.225.5",
       "npm:zod@^4.1.12"
     ]
   }
