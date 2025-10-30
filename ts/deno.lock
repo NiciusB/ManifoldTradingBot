@@ -1,0 +1,22 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:zod@*": "3.25.76",
+    "npm:zod@3": "3.25.76"
+  },
+  "npm": {
+    "zod@3.25.76": {
+      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
+    }
+  },
+  "remote": {
+    "https://esm.sh/zod@3.22.2": "52dad03f8f21300bfcc0dc2217b04f4a45d6dc22e26f4d7559bd313d77058ef8",
+    "https://esm.sh/zod@3.22.2/denonext/zod.mjs": "06a47ed5e7cbceece3135f2f710ee53092a9aaa513b1e0b48faac476e0110c52"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@1",
+      "npm:zod@3"
+    ]
+  }
+}
