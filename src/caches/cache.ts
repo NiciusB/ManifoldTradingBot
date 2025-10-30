@@ -1,3 +1,6 @@
+// import required to polyfill localStorage in Deno Deploy
+import "@sigma/deno-compile-extra/localStoragePolyfill";
+
 // Generic cache implementation with TypeScript generics
 export class Cache<T> {
   private namespace: string;
