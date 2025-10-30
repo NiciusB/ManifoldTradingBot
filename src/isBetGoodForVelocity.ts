@@ -13,6 +13,7 @@ export type IsGoodForVelocityOutcome =
   | "ignored-market-creator"
   | "ignored-low-volume"
   | "ignored-old-bet"
+  | "ignored-not-enough-unique-bettors"
   | "ignored-limit-order-fill"
   | "ignored-extreme-values-decent-user"
   | "ignored-extreme-values-good-user"
@@ -70,6 +71,11 @@ export function isBetGoodForVelocity(
 
   // Ignore old bets. Sometimes supabase gives old bets for some reason
   if (bet.createdTime < Date.now() - 5000) return "ignored-old-bet";
+
+  // Ignore markets without enough unique bettors
+  if (caches.market.uniqueBettorCount < 5) {
+    return "ignored-not-enough-unique-bettors";
+  }
 
   // Ignore markets with low volume
   if (caches.market.volume < 5000 || caches.market.volume24Hours < 100) {

@@ -17,10 +17,12 @@ export async function processBetEvent(bet: WsBet): Promise<void> {
 
   const caches = await loadCachesForBet(bet);
 
+  // This used to be a better metric: https://github.com/NiciusB/ManifoldTradingBot/blob/b4051ea662d5ea9fbdd2d9de23ac3d6bdfc7d9e8/go/ModuleVelocity/caches.go#L74
+  const marketVelocity = caches.market.volume24Hours /
+    (caches.market.volume + 1);
+
   // [0, 1] The bigger, the more we correct
-  const alpha = 0.2 +
-    caches.user.skillEstimate * 0.4 +
-    caches.market.volume24Hours / (caches.market.volume + 1) * 0.3;
+  const alpha = 0.2 + caches.user.skillEstimate * 0.5 + marketVelocity * 0.2;
 
   const beforeOdds = probToOdds(bet.probBefore);
   const afterOdds = probToOdds(bet.probAfter);
@@ -30,11 +32,11 @@ export async function processBetEvent(bet: WsBet): Promise<void> {
 
   const outcome = bet.probBefore > bet.probAfter ? "YES" : "NO";
 
-  // [10, 50]
+  // [10, 50] How much mana to bet
   const amount = Math.round(
     10 +
       caches.user.skillEstimate * 15 +
-      (caches.market.volume24Hours / (caches.market.volume + 1)) * 25,
+      marketVelocity * 25,
   );
 
   const betRequest: PlaceBetRequest = {

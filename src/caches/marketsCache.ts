@@ -6,11 +6,12 @@ export interface CachedMarket {
   volume: number;
   volume24Hours: number;
   totalShares: number;
+  uniqueBettorCount: number;
 }
 
-// Markets cache - 1 day TTL, 15 min minimum refresh
+// Markets cache - 30 min TTL, 2 min minimum refresh
 export const marketsCache = new Cache<CachedMarket>(
-  "marketsCacheV1",
+  "marketsCacheV2",
   async (marketId: string): Promise<CachedMarket> => {
     const apiMarket = await getMarket(marketId);
 
@@ -36,9 +37,10 @@ export const marketsCache = new Cache<CachedMarket>(
       creatorId: apiMarket.creatorId,
       volume: apiMarket.volume,
       volume24Hours: apiMarket.volume24Hours,
+      uniqueBettorCount: apiMarket.uniqueBettorCount,
       totalShares,
     };
   },
-  24 * 60 * 60 * 1000,
-  15 * 60 * 1000,
+  30 * 60 * 1000,
+  2 * 60 * 1000,
 );
