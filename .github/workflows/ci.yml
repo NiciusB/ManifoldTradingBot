@@ -32,3 +32,16 @@ jobs:
         with:
           name: ManifoldTradingBot-linux
           path: dist/ManifoldTradingBot
+
+      - name: Deploy to server
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_USERNAME: ${{ secrets.DEPLOY_SSH_USERNAME }}
+        run: |
+          echo "$SSH_KEY" > deploy_key
+          chmod 600 deploy_key
+          scp -i deploy_key -o StrictHostKeyChecking=no dist/ManifoldTradingBot $SSH_USERNAME@$SSH_HOST:/home/manifoldtradingbot/ManifoldTradingBot
+          ssh -i deploy_key -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl restart manifold-trading-bot"
+          rm deploy_key
